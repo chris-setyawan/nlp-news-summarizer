@@ -1,10 +1,3 @@
-"""
-LEAD-3 Baseline Evaluation Script
-Mengambil 3 kalimat pertama artikel sebagai "ringkasan baseline"
-lalu hitung ROUGE vs summary referensi
-Usage: python evaluate_lead3.py
-"""
-
 import json
 import glob
 import os
@@ -12,10 +5,9 @@ import re
 from rouge_score import rouge_scorer
 from tqdm import tqdm
 
-# ─── CONFIG ───────────────────────────────────────────────────────────────────
+# CONFIG 
 DATA_DIR     = "data/indosum"
 MAX_SAMPLES  = 200
-# ──────────────────────────────────────────────────────────────────────────────
 
 
 def flatten(obj):

@@ -1,10 +1,3 @@
-"""
-backend/main.py
-===============
-FastAPI backend untuk Indonesian News Summarizer + NER.
-Jalankan dengan: uvicorn backend.main:app --reload --port 8000
-"""
-
 import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
@@ -15,34 +8,29 @@ from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from contextlib import asynccontextmanager
+import torch
 
 from scraper.news_scraper import scrape_article
 from models.summarizer import Summarizer
 from models.ner import NERExtractor, LABEL_CONFIG
 
 
-# ── Global model instances ─────────────────────────────────────────────────────
 summarizer: Summarizer = None
 ner_extractor: NERExtractor = None
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Load models on startup."""
     global summarizer, ner_extractor
-    print("[API] Loading models...")
     summarizer = Summarizer()
     summarizer.load()
     ner_extractor = NERExtractor()
     ner_extractor.load()
-    print("[API] Models ready!")
     yield
-    print("[API] Shutting down.")
 
 
 app = FastAPI(
     title="Indonesian News Summarizer API",
-    description="Summarization + NER untuk berita berbahasa Indonesia",
     version="1.0.0",
     lifespan=lifespan,
 )
@@ -55,10 +43,9 @@ app.add_middleware(
 )
 
 
-# ── Request / Response models ──────────────────────────────────────────────────
 class SummarizeRequest(BaseModel):
     url: str
-    length: str = "sedang"  # pendek | sedang | panjang
+    length: str = "sedang"
 
 
 class EntityItem(BaseModel):
@@ -73,20 +60,16 @@ class EntityItem(BaseModel):
 class SummarizeResponse(BaseModel):
     success: bool
     error: str = None
-    # Article info
     title: str = ""
     source: str = ""
     word_count: int = 0
-    # Summary
     summary: str = ""
     summary_word_count: int = 0
     compression_pct: int = 0
-    # NER
     entities: list[EntityItem] = []
     entity_count: int = 0
 
 
-# ── Endpoints ──────────────────────────────────────────────────────────────────
 @app.get("/api/health")
 def health():
     return {"status": "ok", "models_loaded": summarizer is not None}
@@ -105,20 +88,11 @@ def summarize(req: SummarizeRequest):
     # 2. Summarize
     summary_result = summarizer.summarize(article.content, length=req.length)
 
-    # DEBUG
-    print(f"\n[DEBUG] Summary success: {summary_result.success}")
-    print(f"[DEBUG] Summary error: {summary_result.error_message}")
-    print(f"[DEBUG] Summary text: {repr(summary_result.summary)}")
-    print(f"[DEBUG] Summary length: {len(summary_result.summary) if summary_result.summary else 0}")
-
     # 3. NER
-    import torch
     if torch.cuda.is_available():
         torch.cuda.empty_cache()
     ner_result = ner_extractor.extract(article.content)
-    ner_result = ner_extractor.extract(article.content)
 
-    # Build entity list
     entities = []
     if ner_result.success:
         for e in ner_result.entities:
@@ -148,7 +122,6 @@ def summarize(req: SummarizeRequest):
     )
 
 
-# ── Serve frontend static files ────────────────────────────────────────────────
 frontend_dir = os.path.join(os.path.dirname(__file__), "..", "frontend")
 
 if os.path.exists(frontend_dir):
@@ -165,4 +138,4 @@ if os.path.exists(frontend_dir):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("backend.main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("backend.main:app", host="0.0.0.0", port=8000)

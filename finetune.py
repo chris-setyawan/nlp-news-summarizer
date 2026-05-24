@@ -1,8 +1,3 @@
-"""
-Fine-tuning script: cahya/bert2gpt-indonesian-summarization on IndoSum
-Usage: python finetune.py
-"""
-
 import json
 import os
 import glob
@@ -17,7 +12,7 @@ from transformers import (
 )
 from torch.utils.data import Dataset
 
-# ─── CONFIG ───────────────────────────────────────────────────────────────────
+# CONFIG
 MODEL_NAME      = "cahya/bert2gpt-indonesian-summarization"
 DATA_DIR        = "data/indosum"
 OUTPUT_DIR      = "models/finetuned_summarizer"
@@ -29,7 +24,6 @@ LR              = 5e-5
 WARMUP_STEPS    = 200
 SAVE_STEPS      = 500
 EVAL_STEPS      = 500
-# ──────────────────────────────────────────────────────────────────────────────
 
 
 def flatten(obj):

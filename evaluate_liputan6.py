@@ -1,9 +1,3 @@
-"""
-ROUGE Evaluation Script - Liputan6
-Evaluates fine-tuned summarizer on Liputan6 test set
-Usage: python evaluate_liputan6.py
-"""
-
 import json
 import os
 import torch
@@ -13,14 +7,13 @@ from rouge_score import rouge_scorer
 from tqdm import tqdm
 import re
 
-# ─── CONFIG ───────────────────────────────────────────────────────────────────
+# CONFIG
 MODEL_DIR    = "cahya/bert2gpt-indonesian-summarization"
 DATA_DIR     = "data/liputan6/liputan6_data/canonical"
 MAX_INPUT    = 512
 MAX_TARGET   = 128
 NUM_BEAMS    = 4
 MAX_SAMPLES  = 200
-# ──────────────────────────────────────────────────────────────────────────────
 
 
 def flatten(obj):
@@ -68,7 +61,7 @@ def main():
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"  Device: {device}\n")
 
-    # ── Model evaluation ──────────────────────────────────────────
+    # Model evaluation
     print("Loading fine-tuned model...")
     tokenizer = AutoTokenizer.from_pretrained(MODEL_DIR)
     model     = EncoderDecoderModel.from_pretrained(MODEL_DIR).to(device)
@@ -106,7 +99,7 @@ def main():
         predictions.append(pred)
         references.append(reference)
 
-    # ── Model ROUGE ───────────────────────────────────────────────
+    # Model ROUGE
     r1_list, r2_list, rl_list = [], [], []
     for pred, ref in zip(predictions, references):
         scores = scorer.score(ref, pred)
@@ -118,7 +111,7 @@ def main():
     model_r2 = sum(r2_list) / len(r2_list) * 100
     model_rl = sum(rl_list) / len(rl_list) * 100
 
-    # ── LEAD-2 Baseline ───────────────────────────────────────────
+    # LEAD-2 Baseline
     bl_r1, bl_r2, bl_rl = [], [], []
     for article, reference in test_data:
         pred = lead2(article)
@@ -131,7 +124,7 @@ def main():
     lead2_r2 = sum(bl_r2) / len(bl_r2) * 100
     lead2_rl = sum(bl_rl) / len(bl_rl) * 100
 
-    # ── Print Results ─────────────────────────────────────────────
+    # Print Results
     print("\n" + "=" * 50)
     print("  HASIL EVALUASI ROUGE - LIPUTAN6")
     print("=" * 50)

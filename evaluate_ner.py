@@ -1,9 +1,3 @@
-"""
-NER Evaluation Script - IndoNLU NERGrit
-Evaluates IndoBERT-NER on NERGrit test set
-Usage: python evaluate_ner.py
-"""
-
 from datasets import load_dataset
 from transformers import AutoTokenizer, AutoModelForTokenClassification, pipeline
 from seqeval.metrics import classification_report, f1_score, precision_score, recall_score
@@ -11,10 +5,9 @@ from tqdm import tqdm
 import json
 import torch
 
-# ─── CONFIG ───────────────────────────────────────────────────────────────────
+# CONFIG
 MODEL_NAME  = "cahya/bert-base-indonesian-NER"
 MAX_SAMPLES = 200
-# ──────────────────────────────────────────────────────────────────────────────
 
 # Map label NERGrit → label standar
 NERGRIT_MAP = {
@@ -38,10 +31,6 @@ MODEL_LABEL_MAP = {
 
 
 def align_predictions(tokens, preds):
-    """
-    Align model predictions ke token level menggunakan
-    word-level tokenization yang lebih robust.
-    """
     pred_labels = ["O"] * len(tokens)
 
     # Rekonstruksi posisi karakter per token

@@ -1,77 +1,94 @@
-# 🗞️ Indonesian News Summarizer + NER
-**COMP6885001 — Natural Language Processing | Final Project 2025/2026**
+# Indonesian News Summarizer with NER
 
-Aplikasi web untuk meringkas artikel berita Indonesia dan mengidentifikasi
-entitas penting menggunakan IndoBART-v2 dan IndoBERT-NER.
+Final project for COMP6885001 Natural Language Processing, Binus University 2025/2026.
 
----
+This system takes a URL from an Indonesian news portal, scrapes the article content, generates an abstractive summary, and identifies named entities such as people, organizations, and locations mentioned in the article.
 
-## 📁 Struktur Project
+## Team
+
+- Christopher Setyawan (2802459670)
+- Gracias Kumara Winata (2802459683)
+- Vincensius Kevin Mulyono (2802476424)
+
+## Models
+
+| Component | Model |
+|---|---|
+| Summarization | cahya/bert2gpt-indonesian-summarization (fine-tuned on Liputan6) |
+| Named Entity Recognition | cahya/bert-base-indonesian-NER |
+
+## Project Structure
 
 ```
 news_summarizer/
-│
-├── app.py                  ← Main Streamlit app (jalankan ini)
-├── requirements.txt        ← Semua dependency
-│
-├── scraper/
-│   ├── __init__.py
-│   └── news_scraper.py     ← Web scraper (detik.com, kompas.com, dll.)
-│
+├── backend/
+│   └── main.py            - FastAPI backend
+├── frontend/
+│   ├── index.html         - Landing page
+│   └── app.html           - Main app interface
 ├── models/
-│   ├── __init__.py
-│   ├── summarizer.py       ← IndoBART-v2 summarization
-│   └── ner.py              ← IndoBERT NER extraction
-│
-└── utils/                  ← (akan diisi: ROUGE evaluator, fine-tuning script)
+│   ├── summarizer.py      - Summarization pipeline
+│   ├── ner.py             - NER pipeline
+│   └── finetuned_liputan6 - Fine-tuned model weights (not included, see below)
+├── scraper/
+│   └── news_scraper.py    - Web scraper for Indonesian news portals
+├── app.py                 - Streamlit version (legacy)
+├── finetune.py            - Fine-tuning script for IndoSum
+├── finetune_liputan6.py   - Fine-tuning script for Liputan6
+├── evaluate_liputan6.py   - ROUGE evaluation on Liputan6
+├── evaluate_ner.py        - NER evaluation on NERGrit
+└── requirements.txt
 ```
 
----
+## How to Run
 
-## 🚀 Cara Menjalankan
+Install dependencies:
 
-### 1. Install dependencies
 ```bash
 pip install -r requirements.txt
 ```
 
-### 2. Jalankan aplikasi
+Start the server:
+
 ```bash
-streamlit run app.py
+uvicorn backend.main:app --port 8000
 ```
 
-Buka browser ke `http://localhost:8501`
+Open your browser at `http://localhost:8000`.
 
----
+## Model Weights
 
-## 🧩 Komponen NLP
+The fine-tuned model weights are not included in this repository due to file size (~7 GB). Place the fine-tuned model folder at `models/finetuned_liputan6/` before running. If this folder is not found, the system will fall back to the base pre-trained model automatically.
 
-| Komponen | Model | Dataset Training |
-|---|---|---|
-| Summarization | `indobenchmark/indobart-v2` | Liputan6 (215K pasang) |
-| NER | `cahya/bert-base-indonesian-NER` | IndoNLU/NERGrit |
-| Scraper | BeautifulSoup | - |
+## Supported News Portals
 
-### Label NER
-| Label | Keterangan | Contoh |
-|---|---|---|
-| PER | Nama tokoh | Prabowo Subianto |
-| ORG | Organisasi | Bank Indonesia |
-| LOC | Lokasi | Selat Malaka |
-| GPE | Entitas geopolitik | Indonesia |
-| DATE | Waktu/tanggal | 20 Februari 2026 |
-| EVT | Peristiwa | Pemilu 2024 |
+- detik.com
+- kompas.com
+- tribunnews.com
+- tempo.co
+- Other portals via generic parser
 
----
+## Evaluation Results
 
-## 📊 Evaluasi
+Summarization evaluated on Liputan6 canonical test set (200 samples):
 
-- **Summarization**: ROUGE-1, ROUGE-2, ROUGE-L (test set IndoSum)
-- **NER**: Precision, Recall, F1-Score per label
+| Model | ROUGE-1 | ROUGE-2 | ROUGE-L |
+|---|---|---|---|
+| LEAD-2 Baseline | 32.11 | 18.88 | 26.86 |
+| BERT2GPT (no fine-tune) | 39.23 | 21.47 | 31.95 |
+| BERT2GPT + IndoSum | 35.83 | 18.96 | 29.86 |
+| BERT2GPT + Liputan6 | 35.83 | 18.96 | 29.86 |
 
----
+NER evaluated on IndoNLU NERGrit test set (200 samples):
 
-## 👥 Tim
-- [Nama Anggota 1]
-- [Nama Anggota 2]
-- [Nama Anggota 3]
+| Model | Precision | Recall | F1 |
+|---|---|---|---|
+| IndoBERT-NER | 0.1774 | 0.3353 | 0.2320 |
+
+The lower NER score is expected due to label schema mismatch between the model (PER/ORG/LOC/GPE/DATE/EVT) and the NERGrit test set (PERSON/ORGANISATION/PLACE).
+
+## Datasets
+
+- Liputan6: https://github.com/fajri91/sum_liputan6
+- IndoSum: https://www.kaggle.com/datasets/linkgish/indosum
+- IndoNLU NERGrit: https://huggingface.co/datasets/indonlp/indonlu

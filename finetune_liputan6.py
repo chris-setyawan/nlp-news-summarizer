@@ -1,8 +1,3 @@
-"""
-Fine-tuning script: cahya/bert2gpt-indonesian-summarization on Liputan6
-Usage: python finetune_liputan6.py
-"""
-
 import json
 import os
 import glob
@@ -18,7 +13,7 @@ from transformers import (
 )
 from torch.utils.data import Dataset
 
-# ─── CONFIG ───────────────────────────────────────────────────────────────────
+# CONFIG
 MODEL_NAME      = "models/finetuned_summarizer"   # lanjut dari model IndoSum
 DATA_DIR        = "data/liputan6/liputan6_data/canonical"
 OUTPUT_DIR      = "models/finetuned_liputan6"
@@ -26,13 +21,12 @@ MAX_INPUT_LEN   = 512
 MAX_TARGET_LEN  = 128
 BATCH_SIZE      = 4
 EPOCHS          = 3
-LR              = 3e-5        # lebih kecil karena fine-tune dari model yang sudah ada
+LR              = 3e-5        
 WARMUP_STEPS    = 500
 SAVE_STEPS      = 1000
 EVAL_STEPS      = 1000
-MAX_TRAIN       = 50000       # pakai 50K dari 193K supaya tidak terlalu lama
+MAX_TRAIN       = 50000       
 MAX_DEV         = 2000
-# ──────────────────────────────────────────────────────────────────────────────
 
 
 def flatten(obj):

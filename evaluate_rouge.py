@@ -1,9 +1,3 @@
-"""
-ROUGE Evaluation Script
-Evaluates fine-tuned summarizer on IndoSum test set
-Usage: python evaluate_rouge.py
-"""
-
 import json
 import glob
 import os
@@ -12,14 +6,13 @@ from transformers import AutoTokenizer, EncoderDecoderModel
 from rouge_score import rouge_scorer
 from tqdm import tqdm
 
-# ─── CONFIG ───────────────────────────────────────────────────────────────────
+# CONFIG
 MODEL_DIR    = "models/finetuned_summarizer"
 DATA_DIR     = "data/indosum"
 MAX_INPUT    = 512
 MAX_TARGET   = 128
 NUM_BEAMS    = 4
-MAX_SAMPLES  = 200   # pakai 200 sample test — cukup representatif & cepat
-# ──────────────────────────────────────────────────────────────────────────────
+MAX_SAMPLES  = 200
 
 
 def flatten(obj):

@@ -1,37 +1,22 @@
-"""
-app.py
-======
-Main Streamlit application untuk Indonesian News Summarizer + NER.
-Jalankan dengan: streamlit run app.py
-"""
-
 import streamlit as st
 import sys
 import os
 
-# Tambah root project ke path
 sys.path.insert(0, os.path.dirname(__file__))
 
 from scraper.news_scraper import scrape_article
 from models.summarizer import Summarizer
 from models.ner import NERExtractor, LABEL_CONFIG
 
-# ══════════════════════════════════════════════════════════════════════════════
-# PAGE CONFIG
-# ══════════════════════════════════════════════════════════════════════════════
 st.set_page_config(
-    page_title="BeritaRingkas — Indonesian News Summarizer",
-    page_icon="🗞️",
+    page_title="Ringkas — Indonesian News Summarizer",
+    page_icon="R",
     layout="centered",
     initial_sidebar_state="collapsed"
 )
 
-# ══════════════════════════════════════════════════════════════════════════════
-# CUSTOM CSS — mirip referensi: gradient background, card putih, clean typography
-# ══════════════════════════════════════════════════════════════════════════════
 st.markdown("""
 <style>
-/* ─── Global ─────────────────────────────────────────────────────────── */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 html, body, [class*="css"] {
@@ -43,27 +28,12 @@ html, body, [class*="css"] {
     min-height: 100vh;
 }
 
-/* Sembunyikan elemen Streamlit default yang tidak perlu */
 #MainMenu, footer, header { visibility: hidden; }
 .block-container { padding-top: 2rem; padding-bottom: 2rem; }
 
-/* ─── Hero Section ───────────────────────────────────────────────────── */
 .hero {
     text-align: center;
     padding: 3rem 1rem 2rem;
-}
-.hero-badge {
-    display: inline-block;
-    background: rgba(99, 102, 241, 0.1);
-    color: #6366F1;
-    font-size: 0.75rem;
-    font-weight: 600;
-    letter-spacing: 0.08em;
-    padding: 0.35rem 1rem;
-    border-radius: 999px;
-    border: 1px solid rgba(99, 102, 241, 0.2);
-    margin-bottom: 1.2rem;
-    text-transform: uppercase;
 }
 .hero-title {
     font-size: 2.6rem;
@@ -85,18 +55,15 @@ html, body, [class*="css"] {
     line-height: 1.6;
 }
 
-/* ─── Input Card ─────────────────────────────────────────────────────── */
 .input-card {
     background: white;
     border-radius: 20px;
     padding: 2rem;
-    box-shadow: 0 4px 24px rgba(99, 102, 241, 0.08),
-                0 1px 3px rgba(0,0,0,0.04);
+    box-shadow: 0 4px 24px rgba(99, 102, 241, 0.08), 0 1px 3px rgba(0,0,0,0.04);
     margin-bottom: 1.5rem;
     border: 1px solid rgba(99, 102, 241, 0.08);
 }
 
-/* ─── Streamlit Input Override ───────────────────────────────────────── */
 .stTextInput > div > div > input {
     border-radius: 12px !important;
     border: 2px solid #E5E7EB !important;
@@ -111,7 +78,6 @@ html, body, [class*="css"] {
     box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1) !important;
 }
 
-/* ─── Button ─────────────────────────────────────────────────────────── */
 .stButton > button {
     background: linear-gradient(135deg, #6366F1, #8B5CF6) !important;
     color: white !important;
@@ -129,7 +95,6 @@ html, body, [class*="css"] {
     box-shadow: 0 6px 20px rgba(99, 102, 241, 0.45) !important;
 }
 
-/* ─── Result Card ────────────────────────────────────────────────────── */
 .result-card {
     background: white;
     border-radius: 20px;
@@ -145,9 +110,6 @@ html, body, [class*="css"] {
     margin-bottom: 1rem;
     padding-bottom: 0.8rem;
     border-bottom: 2px solid #F3F4F6;
-}
-.result-header-icon {
-    font-size: 1.3rem;
 }
 .result-header-title {
     font-size: 1rem;
@@ -173,7 +135,6 @@ html, body, [class*="css"] {
     border-radius: 0 12px 12px 0;
 }
 
-/* ─── NER Tags ───────────────────────────────────────────────────────── */
 .ner-grid {
     display: flex;
     flex-wrap: wrap;
@@ -202,7 +163,6 @@ html, body, [class*="css"] {
     margin-bottom: 0.4rem;
 }
 
-/* ─── Article Meta ───────────────────────────────────────────────────── */
 .article-meta {
     background: #F9FAFB;
     border-radius: 12px;
@@ -221,7 +181,6 @@ html, body, [class*="css"] {
     color: #9CA3AF;
 }
 
-/* ─── Stats Row ──────────────────────────────────────────────────────── */
 .stats-row {
     display: flex;
     gap: 1rem;
@@ -246,7 +205,6 @@ html, body, [class*="css"] {
     margin-top: 0.1rem;
 }
 
-/* ─── Error / Info ───────────────────────────────────────────────────── */
 .error-box {
     background: #FEF2F2;
     border: 1px solid #FECACA;
@@ -264,24 +222,12 @@ html, body, [class*="css"] {
     font-size: 0.85rem;
     text-align: center;
 }
-
-/* ─── Footer ─────────────────────────────────────────────────────────── */
-.footer {
-    text-align: center;
-    padding: 2rem 0 1rem;
-    color: #D1D5DB;
-    font-size: 0.8rem;
-}
 </style>
 """, unsafe_allow_html=True)
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-# SESSION STATE — supaya model tidak reload setiap kali ada interaksi
-# ══════════════════════════════════════════════════════════════════════════════
 @st.cache_resource(show_spinner=False)
 def load_models():
-    """Load model sekali, cache di memori."""
     summarizer = Summarizer()
     summarizer.load()
     ner = NERExtractor()
@@ -289,11 +235,7 @@ def load_models():
     return summarizer, ner
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-# HELPER RENDER FUNCTIONS
-# ══════════════════════════════════════════════════════════════════════════════
 def render_ner_results(ner_result):
-    """Render hasil NER sebagai tag berwarna per kategori."""
     grouped = ner_result.unique_by_label()
     if not grouped:
         st.markdown('<p style="color:#9CA3AF;font-size:0.9rem;">Tidak ada entitas terdeteksi.</p>',
@@ -303,39 +245,34 @@ def render_ner_results(ner_result):
     for label, texts in grouped.items():
         config = LABEL_CONFIG[label]
         color = config["color"]
-        bg = color + "15"   # warna transparan 15%
+        bg = color + "15"
 
         tags_html = "".join([
             f'<span class="ner-tag" style="background:{bg};color:{color};border-color:{color}40;">'
-            f'{config["emoji"]} {text}</span>'
+            f'{text}</span>'
             for text in texts
         ])
 
         st.markdown(f"""
         <div class="ner-category">
-            <div class="ner-category-label">{config['emoji']} {config['label']}</div>
+            <div class="ner-category-label">{config['label']}</div>
             <div class="ner-grid">{tags_html}</div>
         </div>
         """, unsafe_allow_html=True)
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-# MAIN APP
-# ══════════════════════════════════════════════════════════════════════════════
-
-# ── Hero ───────────────────────────────────────────────────────────────────────
+# Hero
 st.markdown("""
 <div class="hero">
-    <div class="hero-badge">🇮🇩 NLP · Bahasa Indonesia</div>
-    <h1 class="hero-title">Ringkas Berita dengan<br><span>Satu Klik</span></h1>
+    <h1 class="hero-title">Ringkas Berita<br><span>Indonesia</span></h1>
     <p class="hero-subtitle">
-        Paste URL artikel berita Indonesia — sistem akan otomatis menghasilkan
-        ringkasan dan mengidentifikasi tokoh, lokasi, organisasi, dan peristiwa penting.
+        Paste URL artikel berita Indonesia — sistem akan menghasilkan
+        ringkasan dan mengidentifikasi tokoh, lokasi, dan organisasi penting.
     </p>
 </div>
 """, unsafe_allow_html=True)
 
-# ── Input Card ─────────────────────────────────────────────────────────────────
+# Input
 st.markdown('<div class="input-card">', unsafe_allow_html=True)
 
 url_input = st.text_input(
@@ -351,70 +288,61 @@ with col1:
         options=["pendek", "sedang", "panjang"],
         index=1,
         format_func=lambda x: {
-            "pendek": "📄 Pendek (1–2 kalimat)",
-            "sedang": "📃 Sedang (3–4 kalimat)",
-            "panjang": "📋 Panjang (5+ kalimat)"
+            "pendek": "Pendek",
+            "sedang": "Sedang",
+            "panjang": "Panjang"
         }[x],
         label_visibility="collapsed"
     )
 with col2:
-    process_btn = st.button("✨ Proses Artikel", use_container_width=True)
+    process_btn = st.button("Proses Artikel", use_container_width=True)
 
 st.markdown('</div>', unsafe_allow_html=True)
 
-# ── Contoh URL ─────────────────────────────────────────────────────────────────
 st.markdown("""
 <div class="info-box">
-    💡 Mendukung: detik.com · kompas.com · tribunnews.com · tempo.co · dan lainnya
+    Mendukung: detik.com · kompas.com · tribunnews.com · tempo.co · dan lainnya
 </div>
 """, unsafe_allow_html=True)
 
-# ── Proses ─────────────────────────────────────────────────────────────────────
+# Proses
 if process_btn:
     if not url_input.strip():
-        st.markdown('<div class="error-box">⚠️ Masukkan URL artikel terlebih dahulu.</div>',
+        st.markdown('<div class="error-box">Masukkan URL artikel terlebih dahulu.</div>',
                     unsafe_allow_html=True)
     elif not url_input.startswith("http"):
-        st.markdown('<div class="error-box">⚠️ URL tidak valid. Pastikan dimulai dengan https://</div>',
+        st.markdown('<div class="error-box">URL tidak valid. Pastikan dimulai dengan https://</div>',
                     unsafe_allow_html=True)
     else:
-        # Step 1: Scraping
-        with st.spinner("🔍 Mengambil artikel..."):
+        with st.spinner("Mengambil artikel..."):
             article = scrape_article(url_input)
 
         if not article.success:
-            st.markdown(f'<div class="error-box">❌ Gagal mengambil artikel: {article.error_message}</div>',
+            st.markdown(f'<div class="error-box">Gagal mengambil artikel: {article.error_message}</div>',
                         unsafe_allow_html=True)
         else:
-            # Tampilkan meta artikel
             st.markdown(f"""
             <div class="article-meta">
-                <div class="meta-title">📰 {article.title}</div>
-                <div class="meta-source">🌐 {article.source} · {len(article.content.split())} kata</div>
+                <div class="meta-title">{article.title}</div>
+                <div class="meta-source">{article.source} · {len(article.content.split())} kata</div>
             </div>
             """, unsafe_allow_html=True)
 
-            # Load model (sudah di-cache)
-            with st.spinner("⚙️ Memuat model NLP..."):
+            with st.spinner("Memuat model..."):
                 summarizer, ner_extractor = load_models()
 
-            # Step 2: Summarization
-            with st.spinner("📝 Membuat ringkasan..."):
+            with st.spinner("Membuat ringkasan..."):
                 summary_result = summarizer.summarize(article.content, length=length_choice)
 
-            # Step 3: NER
-            with st.spinner("🏷️ Mengidentifikasi entitas..."):
+            with st.spinner("Mengidentifikasi entitas..."):
                 ner_result = ner_extractor.extract(article.content)
-
-            # ── Tampilkan hasil ─────────────────────────────────────────────
 
             # Ringkasan
             st.markdown('<div class="result-card">', unsafe_allow_html=True)
-            st.markdown("""
+            st.markdown(f"""
             <div class="result-header">
-                <span class="result-header-icon">📝</span>
                 <span class="result-header-title">Ringkasan Artikel</span>
-                <span class="result-header-badge">IndoBART-v2</span>
+                <span class="result-header-badge">BERT2GPT · Liputan6</span>
             </div>
             """, unsafe_allow_html=True)
 
@@ -422,7 +350,7 @@ if process_btn:
                 st.markdown(f'<div class="summary-text">{summary_result.summary}</div>',
                             unsafe_allow_html=True)
             else:
-                st.markdown(f'<div class="error-box">❌ {summary_result.error_message}</div>',
+                st.markdown(f'<div class="error-box">{summary_result.error_message}</div>',
                             unsafe_allow_html=True)
             st.markdown('</div>', unsafe_allow_html=True)
 
@@ -430,7 +358,6 @@ if process_btn:
             st.markdown('<div class="result-card">', unsafe_allow_html=True)
             st.markdown(f"""
             <div class="result-header">
-                <span class="result-header-icon">🏷️</span>
                 <span class="result-header-title">Entitas Terdeteksi</span>
                 <span class="result-header-badge">{ner_result.total} entitas</span>
             </div>
@@ -439,19 +366,23 @@ if process_btn:
             if ner_result.success:
                 render_ner_results(ner_result)
             else:
-                st.markdown(f'<div class="error-box">❌ {ner_result.error_message}</div>',
+                st.markdown(f'<div class="error-box">{ner_result.error_message}</div>',
                             unsafe_allow_html=True)
             st.markdown('</div>', unsafe_allow_html=True)
 
             # Stats
+            word_count = len(article.content.split())
+            summary_words = len(summary_result.summary.split()) if summary_result.success else 0
+            compression = round((1 - summary_words / max(word_count, 1)) * 100) if summary_result.success else 0
+
             st.markdown(f"""
             <div class="stats-row">
                 <div class="stat-box">
-                    <div class="stat-value">{len(article.content.split())}</div>
+                    <div class="stat-value">{word_count}</div>
                     <div class="stat-label">Kata Artikel</div>
                 </div>
                 <div class="stat-box">
-                    <div class="stat-value">{len(summary_result.summary.split()) if summary_result.success else 0}</div>
+                    <div class="stat-value">{summary_words}</div>
                     <div class="stat-label">Kata Ringkasan</div>
                 </div>
                 <div class="stat-box">
@@ -459,18 +390,8 @@ if process_btn:
                     <div class="stat-label">Entitas</div>
                 </div>
                 <div class="stat-box">
-                    <div class="stat-value">
-                        {round((1 - len(summary_result.summary.split()) / max(len(article.content.split()), 1)) * 100) if summary_result.success else 0}%
-                    </div>
+                    <div class="stat-value">{compression}%</div>
                     <div class="stat-label">Kompresi</div>
                 </div>
             </div>
             """, unsafe_allow_html=True)
-
-# ── Footer ─────────────────────────────────────────────────────────────────────
-st.markdown("""
-<div class="footer">
-    COMP6885001 · Natural Language Processing · Final Project 2025/2026<br>
-    Powered by IndoBART-v2 + IndoBERT-NER · Binus University
-</div>
-""", unsafe_allow_html=True)
