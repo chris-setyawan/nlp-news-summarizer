@@ -1,0 +1,12 @@
+venv/
+models/finetuned_liputan6/
+models/finetuned_indosum/
+data/
+__pycache__/
+*.pyc
+*.json
+*.pt
+*.bin
+.env
+debug_summary.py
+debug_ner.py

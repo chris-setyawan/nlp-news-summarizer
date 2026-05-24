@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Ringkas — Indonesian News Summarizer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:         #F3F0E8;
+    --bg-warm:    #ECE7DA;
+    --ink:        #0A0A0A;
+    --ink-soft:   #1F1F1F;
+    --muted:      #6B6B6B;
+    --muted-2:    #9A9A9A;
+    --line:       #DDD8CB;
+    --line-soft:  #E8E4DA;
+    --card:       #FFFFFF;
+    --accent:     #1652EE;
+    --accent-2:   #4B7FF5;
+
+    /* Hero scene colors */
+    --scene-1:    #1A1F3A;
+    --scene-2:    #3D4B7A;
+    --scene-3:    #B5A4D9;
+    --scene-4:    #E8D4E9;
+    --scene-5:    #F5C896;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  /* Add breathing room when scrolling to anchor sections */
+  section[id] { scroll-margin-top: 3rem; }
+  body {
+    font-family: 'Geist', sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  .wrap { max-width: 1240px; margin: 0 auto; padding: 0 1.5rem; }
+
+  /* ── Navbar ── */
+  nav {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1.5rem 0;
+    max-width: 1240px; margin: 0 auto;
+    padding-left: 1.5rem; padding-right: 1.5rem;
+  }
+  .brand {
+    display: flex; align-items: center; gap: 0.55rem;
+    text-decoration: none; color: var(--ink);
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 600; font-size: 1.1rem;
+  }
+  .brand-mark {
+    width: 26px; height: 26px;
+    position: relative;
+  }
+  .brand-mark svg { width: 100%; height: 100%; }
+  .nav-center {
+    display: flex; gap: 2.2rem;
+  }
+  .nav-center a {
+    color: var(--ink-soft); text-decoration: none;
+    font-size: 0.92rem; font-weight: 400;
+    transition: color 0.15s;
+  }
+  .nav-center a:hover { color: var(--accent); }
+  .nav-cta {
+    background: var(--ink); color: white;
+    padding: 0.6rem 1.4rem; border-radius: 999px;
+    font-size: 0.88rem; font-weight: 500; text-decoration: none;
+    transition: background 0.2s;
+  }
+  .nav-cta:hover { background: var(--accent); }
+
+  /* ── HERO CARD ── */
+  .hero {
+    padding: 0.5rem 1.5rem 1.5rem;
+    max-width: 1240px; margin: 0 auto;
+  }
+  .hero-card {
+    position: relative;
+    border-radius: 32px;
+    overflow: hidden;
+    height: 580px;
+    background:
+      radial-gradient(ellipse at 20% 70%, var(--scene-3) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 30%, var(--scene-5) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 100%, var(--scene-4) 0%, transparent 55%),
+      linear-gradient(180deg, var(--scene-1) 0%, var(--scene-2) 60%, var(--scene-3) 100%);
+    box-shadow: 0 8px 40px rgba(26,31,58,0.15);
+  }
+
+  /* Floating orbs */
+  .scene-orb {
+    position: absolute; border-radius: 50%;
+    backdrop-filter: blur(10px);
+    background:
+      radial-gradient(circle at 30% 30%, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.05) 40%, transparent 70%);
+    border: 1px solid rgba(255,255,255,0.2);
+    box-shadow:
+      inset 0 0 20px rgba(255,255,255,0.1),
+      0 10px 30px rgba(0,0,0,0.2);
+  }
+  .orb-1 {
+    width: 180px; height: 180px;
+    bottom: -40px; left: 10%;
+    animation: float-a 8s ease-in-out infinite;
+  }
+  .orb-2 {
+    width: 130px; height: 130px;
+    bottom: 80px; right: 18%;
+    animation: float-b 11s ease-in-out infinite;
+  }
+  .orb-3 {
+    width: 90px; height: 90px;
+    top: 40%; right: 8%;
+    animation: float-c 9s ease-in-out infinite;
+  }
+  .orb-4 {
+    width: 60px; height: 60px;
+    top: 30%; left: 12%;
+    animation: float-a 7s ease-in-out infinite;
+  }
+
+  @keyframes float-a { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-30px)} }
+  @keyframes float-b { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-20px)} }
+  @keyframes float-c { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-25px)} }
+
+  /* Grain overlay */
+  .hero-card::before {
+    content: ''; position: absolute; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.4'/%3E%3C/svg%3E");
+    opacity: 0.15; mix-blend-mode: overlay; pointer-events: none;
+  }
+
+  /* Hero content */
+  .hero-content {
+    position: relative; z-index: 2;
+    height: 100%; padding: 3rem 2rem;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center;
+  }
+  .hero-mark {
+    width: 28px; height: 28px; margin-bottom: 1.5rem;
+    opacity: 0.9;
+    animation: rise 0.7s ease both;
+  }
+  .hero-title {
+    font-family: 'Instrument Serif', serif;
+    font-weight: 400;
+    font-size: clamp(2.8rem, 6vw, 5.5rem);
+    line-height: 1.02;
+    letter-spacing: -0.01em;
+    color: white;
+    max-width: 850px;
+    margin-bottom: 1.5rem;
+    animation: rise 0.7s 0.1s ease both;
+  }
+  .hero-title em {
+    font-style: italic;
+    color: var(--scene-5);
+  }
+  .hero-sub {
+    font-family: 'Geist', sans-serif;
+    font-size: 1rem; line-height: 1.7;
+    color: rgba(255,255,255,0.85);
+    max-width: 480px;
+    margin-bottom: 2.2rem;
+    animation: rise 0.7s 0.2s ease both;
+  }
+  .hero-btn {
+    background: rgba(255,255,255,0.95);
+    color: var(--ink);
+    padding: 0.85rem 1.8rem;
+    border-radius: 999px;
+    font-family: 'Geist', sans-serif;
+    font-size: 0.92rem; font-weight: 500;
+    text-decoration: none;
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    transition: all 0.2s;
+    backdrop-filter: blur(10px);
+    animation: rise 0.7s 0.3s ease both;
+  }
+  .hero-btn:hover {
+    background: white; transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+  }
+
+  /* ── Section "What is" ── */
+  .about-section {
+    max-width: 1240px; margin: 5rem auto 3rem;
+    padding: 0 1.5rem;
+    display: grid; grid-template-columns: 1.2fr 1fr;
+    gap: 3rem; align-items: start;
+  }
+  .about-left { padding-top: 0.5rem; }
+  .about-title {
+    font-family: 'Instrument Serif', serif;
+    font-weight: 400;
+    font-size: clamp(2.2rem, 4.5vw, 3.6rem);
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    margin-bottom: 1.8rem;
+  }
+  .about-title em { font-style: italic; color: var(--accent); }
+  .explore-btn {
+    background: var(--ink); color: white;
+    padding: 0.8rem 1.6rem; border-radius: 999px;
+    font-size: 0.9rem; font-weight: 500; text-decoration: none;
+    display: inline-flex; align-items: center; gap: 0.45rem;
+    transition: background 0.2s;
+  }
+  .explore-btn:hover { background: var(--accent); }
+
+  .about-right {
+    font-size: 1rem; color: var(--ink-soft); line-height: 1.75;
+  }
+  .about-right p + p { margin-top: 1rem; }
+
+  /* ── Live demo section ── */
+  .demo-section {
+    max-width: 1240px; margin: 4rem auto;
+    padding: 0 1.5rem;
+  }
+  .demo-eyebrow {
+    font-family: 'Geist Mono', monospace;
+    font-size: 0.75rem; color: var(--accent);
+    letter-spacing: 0.08em; text-transform: uppercase;
+    margin-bottom: 1rem; text-align: center;
+  }
+  .demo-title {
+    font-family: 'Instrument Serif', serif;
+    font-weight: 400;
+    font-size: clamp(2rem, 4vw, 3rem);
+    line-height: 1.1;
+    letter-spacing: -0.01em;
+    text-align: center;
+    margin-bottom: 2.5rem;
+    max-width: 680px;
+    margin-left: auto; margin-right: auto;
+  }
+  .demo-title em { font-style: italic; color: var(--accent); }
+  .demo-card {
+    background: var(--card);
+    border: 1px solid var(--line-soft);
+    border-radius: 28px;
+    overflow: hidden;
+    display: grid; grid-template-columns: 1fr 1fr;
+  }
+  .demo-side {
+    padding: 2.5rem;
+    display: flex; flex-direction: column;
+    border-right: 1px solid var(--line-soft);
+  }
+  .demo-side:last-child { border-right: none; background: var(--bg); }
+  .demo-side-label {
+    font-family: 'Geist Mono', monospace;
+    font-size: 0.7rem; color: var(--muted);
+    letter-spacing: 0.08em; text-transform: uppercase;
+    margin-bottom: 0.8rem;
+    display: flex; align-items: center; gap: 0.5rem;
+  }
+  .demo-side-label::before {
+    content: ''; width: 6px; height: 6px; border-radius: 50%;
+    background: var(--muted-2);
+  }
+  .demo-side.output .demo-side-label::before { background: var(--accent); }
+  .demo-source {
+    font-size: 0.78rem; color: var(--muted);
+    margin-bottom: 1rem; font-family: 'Geist Mono', monospace;
+  }
+  .demo-side.output .demo-source { color: var(--accent); }
+  .demo-headline {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 600; font-size: 1.05rem;
+    color: var(--ink); margin-bottom: 1rem;
+    line-height: 1.4;
+  }
+  .demo-text {
+    font-size: 0.88rem; color: var(--ink-soft);
+    line-height: 1.7; flex: 1;
+  }
+  .demo-text-counter {
+    margin-top: 1rem; padding-top: 1rem;
+    border-top: 1px solid var(--line-soft);
+    font-family: 'Geist Mono', monospace;
+    font-size: 0.74rem; color: var(--muted);
+    display: flex; justify-content: space-between;
+  }
+  .demo-summary {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 500; font-size: 1.05rem;
+    color: var(--ink); line-height: 1.55;
+    margin-bottom: 1.2rem;
+  }
+  .demo-entities {
+    margin-top: auto; padding-top: 1.2rem;
+    border-top: 1px solid var(--line-soft);
+  }
+  .demo-entities-label {
+    font-family: 'Geist Mono', monospace;
+    font-size: 0.7rem; color: var(--muted);
+    letter-spacing: 0.06em; text-transform: uppercase;
+    margin-bottom: 0.6rem;
+  }
+  .demo-pills { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+  .demo-pill {
+    padding: 0.25rem 0.7rem; border-radius: 999px;
+    font-size: 0.78rem; font-weight: 500;
+    border: 1px solid;
+  }
+  .demo-pill.pill-per { background: #FEF3C7; color: #92400E; border-color: #FDE68A; }
+  .demo-pill.pill-loc { background: #D1FAE5; color: #065F46; border-color: #A7F3D0; }
+  .demo-pill.pill-org { background: #E0E7FF; color: #3730A3; border-color: #C7D2FE; }
+  .demo-pill.pill-gpe { background: #DBEAFE; color: #1652EE; border-color: #BFDBFE; }
+
+  /* ── NER table block ── */
+  .ner-table-section {
+    max-width: 1240px; margin: 2rem auto 0;
+    padding: 0 1.5rem;
+  }
+  .ner-table-header {
+    margin-bottom: 1rem;
+  }
+  .ner-table-eyebrow {
+    font-family: 'Geist Mono', monospace;
+    font-size: 0.72rem; color: var(--muted);
+    letter-spacing: 0.06em; text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+  .ner-table-title {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 600; font-size: 1.1rem;
+    color: var(--ink);
+  }
+
+  /* ── Feature cards ── */
+  .features {
+    max-width: 1240px; margin: 3rem auto 5rem;
+    padding: 0 1.5rem;
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+  }
+  .feat-card {
+    background: var(--card);
+    border: 1px solid var(--line-soft);
+    border-radius: 24px;
+    overflow: hidden;
+    transition: transform 0.3s, box-shadow 0.3s;
+  }
+  .feat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(0,0,0,0.06);
+  }
+  .feat-visual {
+    height: 220px;
+    position: relative; overflow: hidden;
+  }
+
+  /* Card 1 visual - summarization */
+  .visual-summary {
+    background: linear-gradient(135deg, #2540C7 0%, #6FA3FF 100%);
+    display: flex; align-items: center; justify-content: center;
+    padding: 1.5rem;
+  }
+  .doc-stack { position: relative; width: 100%; max-width: 240px; }
+  .doc {
+    background: rgba(255,255,255,0.9); border-radius: 8px;
+    padding: 12px 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    margin-bottom: 8px;
+  }
+  .doc-line {
+    height: 4px; background: #94A3B8; border-radius: 2px;
+    margin-bottom: 4px;
+  }
+  .doc-line.short { width: 60%; }
+  .doc-line.medium { width: 80%; }
+  .doc-line:last-child { margin-bottom: 0; }
+  .doc-small {
+    background: rgba(255,255,255,0.95);
+    border-radius: 6px; padding: 8px 10px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    width: 75%; margin: 0 auto;
+    border: 1px solid rgba(22,82,238,0.2);
+  }
+  .doc-small .doc-line { background: #1652EE; opacity: 0.7; }
+  .arrow-down {
+    text-align: center; margin: 6px 0; color: white; opacity: 0.7;
+    font-family: 'Geist Mono', monospace; font-size: 0.7rem; letter-spacing: 0.1em;
+  }
+
+  /* Card 2 visual - NER tags */
+  .visual-ner {
+    background: linear-gradient(135deg, #ECE7DA 0%, #F3EFE3 100%);
+    display: flex; align-items: center; justify-content: center;
+    padding: 1.5rem;
+  }
+  .ner-demo {
+    width: 100%; max-width: 260px;
+    background: white; border-radius: 10px;
+    padding: 14px 16px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+    font-family: 'Geist', sans-serif; font-size: 0.78rem;
+    line-height: 1.8; color: #1F1F1F;
+  }
+  .ner-pill {
+    display: inline; padding: 1px 7px; border-radius: 4px;
+    font-weight: 500; font-size: 0.74rem;
+    margin: 0 1px;
+  }
+  .pill-per { background: #FEF3C7; color: #92400E; }
+  .pill-loc { background: #D1FAE5; color: #065F46; }
+  .pill-org { background: #E0E7FF; color: #3730A3; }
+
+  /* Card 3 visual - models comparison */
+  .visual-models {
+    background: linear-gradient(135deg, #1A1F3A 0%, #3D4B7A 100%);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 1.5rem; gap: 0.5rem;
+  }
+  .model-bar {
+    width: 90%; max-width: 240px;
+    background: rgba(255,255,255,0.1); border-radius: 6px;
+    padding: 8px 12px;
+    display: flex; align-items: center; gap: 0.6rem;
+    backdrop-filter: blur(8px);
+  }
+  .model-bar-name {
+    font-family: 'Geist Mono', monospace;
+    font-size: 0.7rem; color: rgba(255,255,255,0.7);
+    width: 70px; flex-shrink: 0;
+  }
+  .model-bar-fill {
+    flex: 1; height: 6px; background: rgba(255,255,255,0.15);
+    border-radius: 3px; overflow: hidden;
+  }
+  .model-bar-fill > div {
+    height: 100%; background: linear-gradient(90deg, #6FA3FF, #B5A4D9);
+    border-radius: 3px;
+  }
+  .model-bar-val {
+    font-family: 'Geist Mono', monospace;
+    font-size: 0.7rem; color: white;
+  }
+
+  .feat-content {
+    padding: 1.8rem 1.6rem;
+  }
+  .feat-tag {
+    font-family: 'Geist Mono', monospace;
+    font-size: 0.72rem; color: var(--accent);
+    letter-spacing: 0.06em; text-transform: uppercase;
+    margin-bottom: 0.8rem;
+  }
+  .feat-title {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 600; font-size: 1.2rem;
+    color: var(--ink); margin-bottom: 0.6rem;
+    letter-spacing: -0.01em;
+  }
+  .feat-desc {
+    color: var(--muted); font-size: 0.9rem; line-height: 1.65;
+  }
+
+  /* ── Model showcase section ── */
+  .models-section {
+    max-width: 1240px; margin: 5rem auto;
+    padding: 0 1.5rem;
+  }
+  .models-header {
+    text-align: center; margin-bottom: 3rem;
+  }
+  .models-eyebrow {
+    font-family: 'Geist Mono', monospace;
+    font-size: 0.75rem; color: var(--accent);
+    letter-spacing: 0.08em; text-transform: uppercase;
+    margin-bottom: 1rem;
+  }
+  .models-title {
+    font-family: 'Instrument Serif', serif;
+    font-weight: 400;
+    font-size: clamp(2rem, 4vw, 3rem);
+    line-height: 1.1;
+    letter-spacing: -0.01em;
+    max-width: 680px; margin: 0 auto;
+  }
+  .models-title em { font-style: italic; color: var(--accent); }
+
+  .models-table {
+    background: var(--card);
+    border: 1px solid var(--line-soft);
+    border-radius: 20px;
+    overflow: hidden;
+  }
+  .table-row {
+    display: grid;
+    grid-template-columns: 80px 1fr 100px 100px 100px;
+    align-items: center;
+    padding: 1.2rem 1.6rem;
+    border-bottom: 1px solid var(--line-soft);
+    transition: background 0.15s;
+  }
+  .table-row:last-child { border-bottom: none; }
+  .table-row:not(.header):hover { background: var(--bg); }
+  .table-row.header {
+    background: var(--bg-warm);
+    font-family: 'Geist Mono', monospace;
+    font-size: 0.72rem; color: var(--muted);
+    letter-spacing: 0.06em; text-transform: uppercase;
+    font-weight: 500;
+  }
+  .row-num {
+    font-family: 'Geist Mono', monospace;
+    font-size: 0.85rem; color: var(--muted);
+    font-weight: 500;
+  }
+  .row-name {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 500; font-size: 0.98rem; color: var(--ink);
+  }
+  .row-name small {
+    display: block;
+    font-family: 'Geist', sans-serif;
+    font-weight: 400;
+    font-size: 0.8rem; color: var(--muted);
+    margin-top: 0.15rem;
+  }
+  .row-metric {
+    font-family: 'Geist Mono', monospace;
+    font-size: 0.88rem; color: var(--ink-soft); font-weight: 500;
+    text-align: right;
+  }
+  .row-metric.best { color: var(--accent); font-weight: 600; }
+
+  /* ── CTA section ── */
+  .cta-section {
+    max-width: 1240px; margin: 5rem auto 3rem;
+    padding: 0 1.5rem;
+  }
+  .cta-card {
+    background: var(--ink);
+    border-radius: 28px;
+    padding: 4rem 3rem;
+    position: relative; overflow: hidden;
+    text-align: center;
+  }
+  .cta-card::before {
+    content: ''; position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse at 30% 30%, rgba(75,127,245,0.25) 0%, transparent 50%),
+      radial-gradient(ellipse at 70% 70%, rgba(181,164,217,0.15) 0%, transparent 50%);
+    pointer-events: none;
+  }
+  .cta-card-title {
+    font-family: 'Instrument Serif', serif;
+    font-weight: 400;
+    font-size: clamp(2rem, 4.5vw, 3.4rem);
+    line-height: 1.1;
+    color: white;
+    margin-bottom: 1rem;
+    position: relative;
+  }
+  .cta-card-title em { font-style: italic; color: var(--scene-5); }
+  .cta-card-desc {
+    color: rgba(255,255,255,0.7);
+    font-size: 1rem; line-height: 1.6;
+    max-width: 480px; margin: 0 auto 2rem;
+    position: relative;
+  }
+  .cta-card-btn {
+    background: white; color: var(--ink);
+    padding: 0.95rem 2rem; border-radius: 999px;
+    font-size: 0.95rem; font-weight: 500; text-decoration: none;
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    transition: all 0.2s; position: relative;
+  }
+  .cta-card-btn:hover {
+    background: var(--scene-5); transform: translateY(-2px);
+  }
+
+  footer {
+    border-top: 1px solid var(--line);
+    padding: 2rem;
+    text-align: center;
+    color: var(--muted); font-size: 0.82rem;
+  }
+
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Mobile */
+  @media (max-width: 900px) {
+    .nav-center { display: none; }
+    .hero-card { height: 480px; }
+    .about-section { grid-template-columns: 1fr; gap: 1.5rem; }
+    .features { grid-template-columns: 1fr; }
+    .demo-card { grid-template-columns: 1fr; }
+    .demo-side { border-right: none; border-bottom: 1px solid var(--line-soft); }
+    .table-row { grid-template-columns: 40px 1fr 70px; }
+    .table-row > :nth-child(4), .table-row > :nth-child(5) { display: none; }
+    .cta-card { padding: 3rem 1.5rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Nav -->
+<nav>
+  <a href="/" class="brand">
+    <div class="brand-mark">
+      <svg viewBox="0 0 28 28" fill="none">
+        <circle cx="14" cy="14" r="13" stroke="currentColor" stroke-width="1.5"/>
+        <path d="M14 1V14L23 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+    </div>
+    Ringkas
+  </a>
+  <div class="nav-center">
+    <a href="#about">Tentang</a>
+    <a href="#demo">Demo</a>
+    <a href="#features">Fitur</a>
+    <a href="#models">Model</a>
+  </div>
+  <a href="/app" class="nav-cta">Buka Aplikasi</a>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-card">
+    <div class="scene-orb orb-1"></div>
+    <div class="scene-orb orb-2"></div>
+    <div class="scene-orb orb-3"></div>
+    <div class="scene-orb orb-4"></div>
+
+    <div class="hero-content">
+      <div class="hero-mark">
+        <svg viewBox="0 0 28 28" fill="none" stroke="white" stroke-width="1.5">
+          <circle cx="14" cy="14" r="13"/>
+          <path d="M14 1V14L23 9" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <h1 class="hero-title">
+        Di mana berita<br>
+        bertemu <em>pemahaman</em>
+      </h1>
+      <p class="hero-sub">
+        Sistem peringkasan otomatis dan ekstraksi entitas untuk artikel
+        berita berbahasa Indonesia, dilatih pada 215.000+ pasangan data.
+      </p>
+      <a href="/app" class="hero-btn">
+        Coba sekarang
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M3 11L11 3M11 3H4.5M11 3V9.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- About -->
+<section class="about-section" id="about">
+  <div class="about-left">
+    <h2 class="about-title">
+      Apa itu <em>Ringkas</em>?
+    </h2>
+    <a href="#features" class="explore-btn">
+      Pelajari lebih lanjut
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+        <path d="M3 9L9 3M9 3H4.5M9 3V7.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </a>
+  </div>
+  <div class="about-right">
+    <p>
+      Ringkas adalah aplikasi NLP yang menggabungkan dua komponen utama:
+      peringkasan abstraktif dan named entity recognition, untuk membantu
+      pembaca mengonsumsi berita Indonesia dengan lebih efisien.
+    </p>
+    <p>
+      Cukup paste URL artikel dari portal berita Indonesia, sistem akan
+      mengekstrak konten, meringkasnya menggunakan model BERT2GPT yang
+      di-fine-tune pada dataset Liputan6, lalu mengidentifikasi entitas
+      penting di dalamnya.
+    </p>
+  </div>
+</section>
+
+<!-- Live demo section -->
+<section class="demo-section" id="demo">
+  <div class="demo-eyebrow">— Live Demo</div>
+  <h2 class="demo-title">
+    Lihat sistem <em>bekerja</em>
+  </h2>
+  <div class="demo-card">
+    <div class="demo-side">
+      <div class="demo-side-label">Input · Artikel</div>
+      <div class="demo-source">detik.com · 281 kata</div>
+      <div class="demo-headline">Jose Mourinho di Persimpangan Jalan Kariernya</div>
+      <div class="demo-text">
+        Pelatih asal Portugal, Jose Mourinho, kembali menjadi sorotan setelah
+        pertemuannya dengan presiden Benfica. Sang pelatih yang dijuluki The Special One
+        mengaku belum mendapat tawaran resmi dari Real Madrid maupun klub lainnya.
+        Namun, situasi di Stadion da Luz dianggap kurang stabil setelah hasil buruk
+        beberapa pekan terakhir di Liga Portugal...
+      </div>
+      <div class="demo-text-counter">
+        <span>281 kata</span>
+        <span>1.847 karakter</span>
+      </div>
+    </div>
+
+    <div class="demo-side output">
+      <div class="demo-side-label">Output · Hasil Sistem</div>
+      <div class="demo-source">BERT2GPT + IndoBERT-NER</div>
+      <div class="demo-summary">
+        Jose Mourinho mengaku belum mendapat tawaran dari Real Madrid. Namun, jika
+        ada yang hengkang dari Stadion da Luz musim depan, sang pelatih berpeluang
+        kembali ke Liga Portugal.
+      </div>
+      <div class="demo-entities">
+        <div class="demo-entities-label">Entitas terdeteksi</div>
+        <div class="demo-pills">
+          <span class="demo-pill pill-per">Jose Mourinho</span>
+          <span class="demo-pill pill-org">Real Madrid</span>
+          <span class="demo-pill pill-org">Benfica</span>
+          <span class="demo-pill pill-loc">Stadion da Luz</span>
+          <span class="demo-pill pill-gpe">Portugal</span>
+          <span class="demo-pill pill-org">Liga Portugal</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Features -->
+<section class="features" id="features">
+
+  <div class="feat-card">
+    <div class="feat-visual visual-summary">
+      <div class="doc-stack">
+        <div class="doc">
+          <div class="doc-line"></div>
+          <div class="doc-line medium"></div>
+          <div class="doc-line"></div>
+          <div class="doc-line short"></div>
+          <div class="doc-line medium"></div>
+          <div class="doc-line"></div>
+          <div class="doc-line short"></div>
+        </div>
+        <div class="arrow-down">↓ RINGKAS</div>
+        <div class="doc-small">
+          <div class="doc-line"></div>
+          <div class="doc-line medium"></div>
+        </div>
+      </div>
+    </div>
+    <div class="feat-content">
+      <div class="feat-tag">01 — Summarization</div>
+      <div class="feat-title">Peringkasan abstraktif</div>
+      <div class="feat-desc">
+        Model BERT2GPT menghasilkan ringkasan yang koheren dan natural,
+        bukan sekadar potongan kalimat asli.
+      </div>
+    </div>
+  </div>
+
+  <div class="feat-card">
+    <div class="feat-visual visual-ner">
+      <div class="ner-demo">
+        <div style="font-size:0.7rem;color:#94A3B8;font-family:'Geist Mono',monospace;letter-spacing:0.05em;margin-bottom:6px;">DETEKSI ENTITAS</div>
+        Presiden <span class="ner-pill pill-per">Prabowo</span> bertemu
+        PM <span class="ner-pill pill-per">Anwar Ibrahim</span>
+        di <span class="ner-pill pill-loc">Jakarta</span>.
+        <span class="ner-pill pill-org">Bank Indonesia</span> turut hadir.
+      </div>
+    </div>
+    <div class="feat-content">
+      <div class="feat-tag">02 — NER</div>
+      <div class="feat-title">Ekstraksi entitas</div>
+      <div class="feat-desc">
+        IndoBERT-NER mendeteksi enam kategori: tokoh, organisasi, lokasi,
+        geopolitik, waktu, dan peristiwa.
+      </div>
+    </div>
+  </div>
+
+  <div class="feat-card">
+    <div class="feat-visual visual-models">
+      <div class="model-bar">
+        <div class="model-bar-name">LEAD-2</div>
+        <div class="model-bar-fill"><div style="width:32%"></div></div>
+        <div class="model-bar-val">32.1</div>
+      </div>
+      <div class="model-bar">
+        <div class="model-bar-name">no FT</div>
+        <div class="model-bar-fill"><div style="width:39%"></div></div>
+        <div class="model-bar-val">39.2</div>
+      </div>
+      <div class="model-bar">
+        <div class="model-bar-name">IndoSum</div>
+        <div class="model-bar-fill"><div style="width:36%"></div></div>
+        <div class="model-bar-val">35.8</div>
+      </div>
+      <div class="model-bar">
+        <div class="model-bar-name">Liputan6</div>
+        <div class="model-bar-fill"><div style="width:39%"></div></div>
+        <div class="model-bar-val">39.2</div>
+      </div>
+    </div>
+    <div class="feat-content">
+      <div class="feat-tag">03 — Evaluation</div>
+      <div class="feat-title">Lima model dibandingkan</div>
+      <div class="feat-desc">
+        Performa diukur dengan ROUGE pada dataset Liputan6 dan IndoSum,
+        terhadap baseline LEAD-2.
+      </div>
+    </div>
+  </div>
+
+</section>
+
+<!-- Models showcase -->
+<section class="models-section" id="models">
+  <div class="models-header">
+    <div class="models-eyebrow">— Perbandingan Model</div>
+    <h2 class="models-title">
+      Lima pendekatan, <em>satu kesimpulan</em>
+    </h2>
+  </div>
+
+  <div class="models-table">
+    <div class="table-row header">
+      <div></div>
+      <div>Model</div>
+      <div style="text-align:right;">ROUGE-1</div>
+      <div style="text-align:right;">ROUGE-2</div>
+      <div style="text-align:right;">ROUGE-L</div>
+    </div>
+    <div class="table-row">
+      <div class="row-num">01</div>
+      <div class="row-name">LEAD-2 <small>Baseline</small></div>
+      <div class="row-metric">32.11</div>
+      <div class="row-metric">18.88</div>
+      <div class="row-metric">26.86</div>
+    </div>
+    <div class="table-row">
+      <div class="row-num">02</div>
+      <div class="row-name">BERT2GPT <small>Tanpa fine-tuning</small></div>
+      <div class="row-metric best">39.23</div>
+      <div class="row-metric best">21.47</div>
+      <div class="row-metric best">31.95</div>
+    </div>
+    <div class="table-row">
+      <div class="row-num">03</div>
+      <div class="row-name">BERT2GPT <small>Fine-tuned IndoSum</small></div>
+      <div class="row-metric">91.93</div>
+      <div class="row-metric">89.83</div>
+      <div class="row-metric">91.25</div>
+    </div>
+    <div class="table-row">
+      <div class="row-num">04</div>
+      <div class="row-name">BERT2GPT <small>Fine-tuned Liputan6</small></div>
+      <div class="row-metric">35.83</div>
+      <div class="row-metric">18.96</div>
+      <div class="row-metric">29.86</div>
+    </div>
+  </div>
+
+  <!-- NER Table -->
+  <div class="ner-table-section" style="padding:0;margin-top:2.5rem;">
+    <div class="ner-table-header">
+      <div class="ner-table-eyebrow">Named Entity Recognition · IndoNLU NERGrit test set</div>
+      <div class="ner-table-title">Evaluasi Model NER</div>
+    </div>
+    <div class="models-table">
+      <div class="table-row header">
+        <div></div>
+        <div>Model</div>
+        <div style="text-align:right;">Precision</div>
+        <div style="text-align:right;">Recall</div>
+        <div style="text-align:right;">F1-Score</div>
+      </div>
+      <div class="table-row">
+        <div class="row-num">05</div>
+        <div class="row-name">IndoBERT-NER <small>Cross-dataset evaluation</small></div>
+        <div class="row-metric">0.1774</div>
+        <div class="row-metric">0.3353</div>
+        <div class="row-metric">0.2320</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <div class="cta-card">
+    <h2 class="cta-card-title">Coba <em>langsung</em><br>tanpa registrasi</h2>
+    <p class="cta-card-desc">
+      Paste URL artikel berita Indonesia, dapatkan ringkasan dan
+      entitas penting dalam hitungan detik.
+    </p>
+    <a href="/app" class="cta-card-btn">
+      Buka aplikasi
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+        <path d="M3 11L11 3M11 3H4.5M11 3V9.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </a>
+  </div>
+</section>
+
+<footer>
+  COMP6885001 · Natural Language Processing · Final Project 2025/2026 · Binus University
+</footer>
+
+</body>
+</html>

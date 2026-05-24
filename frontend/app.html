@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Ringkas — App</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:         #F3F0E8;
+    --bg-warm:    #ECE7DA;
+    --sidebar:    #EFEBE0;
+    --ink:        #0A0A0A;
+    --ink-soft:   #1F1F1F;
+    --muted:      #6B6B6B;
+    --muted-2:    #9A9A9A;
+    --line:       #DDD8CB;
+    --line-soft:  #E8E4DA;
+    --card:       #FFFFFF;
+    --accent:     #1652EE;
+    --accent-2:   #4B7FF5;
+    --accent-soft:#EEF2FE;
+
+    --scene-1:    #1A1F3A;
+    --scene-2:    #3D4B7A;
+    --scene-3:    #B5A4D9;
+    --scene-4:    #E8D4E9;
+    --scene-5:    #F5C896;
+
+    /* Entity colors - palette pastel akademis */
+    --c-per-bg:   #FEF3C7; --c-per-fg: #92400E; --c-per-bd: #FDE68A;
+    --c-org-bg:   #E0E7FF; --c-org-fg: #3730A3; --c-org-bd: #C7D2FE;
+    --c-loc-bg:   #D1FAE5; --c-loc-fg: #065F46; --c-loc-bd: #A7F3D0;
+    --c-gpe-bg:   #DBEAFE; --c-gpe-fg: #1652EE; --c-gpe-bd: #BFDBFE;
+    --c-date-bg:  #FCE7F3; --c-date-fg: #9D174D; --c-date-bd: #FBCFE8;
+    --c-evt-bg:   #FED7AA; --c-evt-fg: #9A3412; --c-evt-bd: #FDBA74;
+  }
+
+  body {
+    font-family: 'Geist', sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    height: 100vh;
+    display: flex;
+    overflow: hidden;
+  }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    width: 290px; flex-shrink: 0;
+    background: var(--sidebar);
+    border-right: 1px solid var(--line);
+    display: flex; flex-direction: column;
+    padding: 1.4rem 1rem 1rem;
+    position: relative;
+  }
+  .sidebar-brand {
+    display: flex; align-items: center; gap: 0.6rem;
+    padding: 0.4rem 0.5rem 1.6rem;
+    text-decoration: none;
+    color: var(--ink);
+  }
+  .brand-mark { width: 26px; height: 26px; flex-shrink: 0; }
+  .brand-mark svg { width: 100%; height: 100%; }
+  .brand-name {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 600; font-size: 1.08rem;
+    letter-spacing: -0.01em;
+  }
+
+  .new-btn {
+    width: 100%;
+    background: var(--ink); color: white;
+    border: none; border-radius: 12px;
+    padding: 0.8rem 0.95rem;
+    font-family: 'Geist', sans-serif; font-size: 0.9rem; font-weight: 500;
+    cursor: pointer; transition: all 0.2s;
+    display: flex; align-items: center; gap: 0.55rem;
+    margin-bottom: 1.8rem;
+    position: relative; overflow: hidden;
+  }
+  .new-btn::before {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
+    opacity: 0; transition: opacity 0.25s;
+  }
+  .new-btn:hover::before { opacity: 1; }
+  .new-btn > * { position: relative; z-index: 1; }
+  .new-btn svg { flex-shrink: 0; }
+
+  .sidebar-section {
+    font-family: 'Geist Mono', monospace;
+    font-size: 0.7rem; color: var(--muted-2);
+    text-transform: uppercase; letter-spacing: 0.08em;
+    padding: 0 0.5rem; margin-bottom: 0.7rem;
+  }
+
+  .history-list {
+    flex: 1; overflow-y: auto;
+    display: flex; flex-direction: column; gap: 0.2rem;
+    padding-right: 0.2rem;
+  }
+  .history-empty {
+    padding: 1rem 0.5rem;
+    font-size: 0.82rem; color: var(--muted-2);
+    line-height: 1.55;
+  }
+  .history-item {
+    padding: 0.65rem 0.75rem; border-radius: 9px;
+    cursor: pointer; transition: all 0.15s;
+    border: 1px solid transparent;
+    background: transparent;
+  }
+  .history-item:hover {
+    background: var(--bg-warm); border-color: var(--line-soft);
+  }
+  .history-item.active {
+    background: var(--card); border-color: var(--line);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+  }
+  .history-item-title {
+    font-size: 0.85rem; color: var(--ink-soft);
+    font-weight: 500; line-height: 1.4;
+    margin-bottom: 0.2rem;
+    overflow: hidden; text-overflow: ellipsis;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  }
+  .history-item-meta {
+    font-family: 'Geist Mono', monospace;
+    font-size: 0.7rem; color: var(--muted);
+    display: flex; align-items: center; gap: 0.4rem;
+  }
+  .history-item-meta::before {
+    content: ''; width: 4px; height: 4px; border-radius: 50%;
+    background: var(--accent);
+  }
+
+  /* Sidebar footer */
+  .sidebar-footer {
+    padding-top: 1rem;
+    border-top: 1px solid var(--line-soft);
+    margin-top: 0.8rem;
+  }
+  .status-row {
+    display: flex; align-items: center; gap: 0.5rem;
+    padding: 0.5rem 0.6rem;
+    font-family: 'Geist Mono', monospace;
+    font-size: 0.7rem; color: var(--muted);
+    letter-spacing: 0.04em;
+  }
+  .status-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: #10B981; box-shadow: 0 0 8px rgba(16,185,129,0.5);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100% {opacity:1;} 50% {opacity:0.5;} }
+
+  .footer-link {
+    display: flex; align-items: center; gap: 0.5rem;
+    padding: 0.45rem 0.6rem;
+    color: var(--muted); font-size: 0.82rem;
+    text-decoration: none; transition: color 0.15s;
+    border-radius: 8px;
+  }
+  .footer-link:hover { color: var(--ink); background: var(--bg-warm); }
+
+  /* ── Main ── */
+  main {
+    flex: 1; display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+
+  .topbar {
+    height: 60px; flex-shrink: 0;
+    padding: 0 2rem;
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid var(--line);
+    background: var(--bg);
+  }
+  .topbar-left {
+    display: flex; align-items: center; gap: 0.8rem;
+    font-size: 0.88rem; color: var(--muted);
+  }
+  .topbar-left strong {
+    color: var(--ink); font-weight: 500;
+  }
+  .topbar-right {
+    display: flex; gap: 0.5rem; align-items: center;
+  }
+  .live-pill {
+    display: flex; align-items: center; gap: 0.45rem;
+    background: rgba(16,185,129,0.1);
+    border: 1px solid rgba(16,185,129,0.25);
+    border-radius: 999px;
+    padding: 0.3rem 0.75rem;
+    font-family: 'Geist Mono', monospace;
+    font-size: 0.72rem; color: #065F46;
+    letter-spacing: 0.04em;
+  }
+  .model-tag {
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: 999px; padding: 0.3rem 0.85rem;
+    font-size: 0.78rem; color: var(--ink-soft); font-weight: 500;
+    font-family: 'Geist Mono', monospace;
+  }
+
+  .content {
+    flex: 1; overflow-y: auto;
+    padding: 3rem 2rem;
+  }
+  .content-inner {
+    max-width: 880px; margin: 0 auto;
+  }
+
+  /* ── Initial / input state ── */
+  .input-section {
+  text-align: center;
+  padding: 9rem 0 2rem;
+  animation: rise 0.5s ease both;
+}
+  .input-logo {
+    width: 56px; height: 56px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, var(--scene-1) 0%, var(--scene-2) 100%);
+    margin: 0 auto 1.8rem;
+    display: flex; align-items: center; justify-content: center;
+    position: relative; overflow: hidden;
+    box-shadow: 0 8px 24px rgba(26,31,58,0.2);
+  }
+  .input-logo::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.3), transparent 50%);
+  }
+  .input-logo svg { position: relative; z-index: 1; }
+
+  .input-greeting {
+    font-family: 'Instrument Serif', serif;
+    font-weight: 400;
+    font-size: clamp(2rem, 4vw, 3rem);
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    color: var(--ink); margin-bottom: 0.8rem;
+  }
+  .input-greeting em {
+    font-style: italic;
+    color: var(--accent);
+  }
+  .input-subtitle {
+    color: var(--muted); font-size: 0.98rem;
+    line-height: 1.6; max-width: 500px; margin: 0 auto 2.5rem;
+  }
+
+  /* URL input box */
+  .url-box {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 1.2rem 1.3rem;
+    transition: all 0.25s;
+    margin-bottom: 1rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+  }
+  .url-box:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 4px rgba(22,82,238,0.1), 0 4px 16px rgba(22,82,238,0.08);
+  }
+  .url-input {
+    width: 100%; background: none; border: none;
+    color: var(--ink); font-family: 'Geist', sans-serif;
+    font-size: 0.95rem; line-height: 1.5;
+    outline: none; resize: none;
+  }
+  .url-input::placeholder { color: var(--muted-2); }
+  .url-actions {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-top: 0.85rem; padding-top: 0.85rem;
+    border-top: 1px solid var(--line-soft);
+  }
+  .length-row { display: flex; gap: 0.3rem; }
+  .length-btn {
+    padding: 0.4rem 0.9rem; border-radius: 8px;
+    background: transparent; border: 1px solid var(--line);
+    color: var(--muted); font-family: 'Geist', sans-serif;
+    font-size: 0.82rem; font-weight: 500;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .length-btn.active {
+    background: var(--ink); border-color: var(--ink); color: white;
+  }
+  .length-btn:hover:not(.active) {
+    background: var(--bg-warm); color: var(--ink);
+  }
+  .submit-btn {
+    background: var(--accent); color: white;
+    border: none; border-radius: 9px;
+    padding: 0.6rem 1.3rem;
+    font-family: 'Geist', sans-serif; font-size: 0.88rem; font-weight: 500;
+    cursor: pointer; transition: all 0.2s;
+    display: inline-flex; align-items: center; gap: 0.45rem;
+  }
+  .submit-btn:hover:not(:disabled) {
+    background: var(--accent-2);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(22,82,238,0.3);
+  }
+  .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+  .submit-btn svg { transition: transform 0.2s; }
+  .submit-btn:hover:not(:disabled) svg { transform: translate(2px, -2px); }
+
+  .supported {
+    display: flex; gap: 0.4rem; justify-content: center; flex-wrap: wrap;
+    margin-top: 1.5rem;
+  }
+  .supported-chip {
+    background: var(--bg-warm); border: 1px solid var(--line);
+    border-radius: 999px; padding: 0.32rem 0.85rem;
+    font-size: 0.76rem; color: var(--muted);
+    font-family: 'Geist Mono', monospace;
+    transition: all 0.15s;
+  }
+  .supported-chip:hover {
+    background: var(--card); color: var(--ink);
+    transform: translateY(-1px);
+  }
+
+  /* ── Loading state ── */
+  .loading-section {
+    padding: 1rem 0;
+    animation: rise 0.4s ease both;
+  }
+  .loading-card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 1.2rem 1.4rem;
+    margin-bottom: 0.8rem;
+    display: flex; align-items: center; gap: 1rem;
+    transition: all 0.3s;
+  }
+  .loading-card.done {
+    background: var(--accent-soft);
+    border-color: rgba(22,82,238,0.2);
+  }
+  .loading-card.active {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(22,82,238,0.08);
+  }
+  .loading-num {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--bg-warm);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Geist Mono', monospace; font-size: 0.78rem;
+    font-weight: 500; color: var(--muted);
+    flex-shrink: 0;
+    transition: all 0.3s;
+  }
+  .loading-card.active .loading-num {
+    background: var(--accent); color: white;
+  }
+  .loading-card.done .loading-num {
+    background: #10B981; color: white;
+  }
+  .loading-content { flex: 1; }
+  .loading-title {
+    font-weight: 500; font-size: 0.92rem;
+    color: var(--ink); margin-bottom: 0.15rem;
+  }
+  .loading-desc {
+    font-size: 0.8rem; color: var(--muted);
+    font-family: 'Geist Mono', monospace;
+  }
+  .loading-spinner {
+    width: 18px; height: 18px; border-radius: 50%;
+    border: 2px solid var(--line);
+    border-top-color: var(--accent);
+    animation: spin 0.8s linear infinite;
+    flex-shrink: 0;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-check {
+    width: 18px; height: 18px; flex-shrink: 0;
+    color: #10B981;
+  }
+
+  /* ── Results state ── */
+  .results {
+    display: flex; flex-direction: column; gap: 1rem;
+    animation: rise 0.4s ease both;
+  }
+
+  /* Article meta hero */
+  .article-hero {
+    background:
+      radial-gradient(ellipse at 20% 30%, rgba(181,164,217,0.3) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 70%, rgba(245,200,150,0.3) 0%, transparent 50%),
+      linear-gradient(135deg, var(--scene-1) 0%, var(--scene-2) 100%);
+    border-radius: 20px;
+    padding: 1.8rem 2rem;
+    color: white;
+    position: relative; overflow: hidden;
+  }
+  .article-hero::before {
+    content: ''; position: absolute; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.4'/%3E%3C/svg%3E");
+    opacity: 0.15; mix-blend-mode: overlay; pointer-events: none;
+  }
+  .article-hero-eyebrow {
+    font-family: 'Geist Mono', monospace;
+    font-size: 0.72rem; color: rgba(255,255,255,0.7);
+    letter-spacing: 0.08em; text-transform: uppercase;
+    margin-bottom: 0.7rem;
+    display: flex; align-items: center; gap: 0.5rem;
+    position: relative;
+  }
+  .article-hero-eyebrow::before {
+    content: ''; width: 5px; height: 5px; border-radius: 50%;
+    background: var(--scene-5);
+  }
+  .article-hero-title {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 600; font-size: 1.4rem;
+    line-height: 1.3; letter-spacing: -0.01em;
+    margin-bottom: 0.6rem;
+    position: relative;
+  }
+  .article-hero-source {
+    font-family: 'Geist Mono', monospace;
+    font-size: 0.78rem; color: rgba(255,255,255,0.75);
+    position: relative;
+  }
+
+  /* Stats row */
+  .stats-row {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.7rem;
+  }
+  .stat-card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 1.1rem 1.2rem;
+    transition: all 0.2s;
+  }
+  .stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.04);
+  }
+  .stat-card-label {
+    font-family: 'Geist Mono', monospace;
+    font-size: 0.7rem; color: var(--muted);
+    letter-spacing: 0.05em; text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+  .stat-val {
+    font-family: 'Instrument Serif', serif;
+    font-size: 2.1rem; font-weight: 400;
+    color: var(--ink); letter-spacing: -0.02em;
+    line-height: 1;
+  }
+  .stat-val sup {
+    font-family: 'Geist Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--muted);
+    margin-left: 0.1rem;
+  }
+
+  /* Result cards */
+  .result-card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 1.5rem 1.6rem;
+    transition: all 0.2s;
+  }
+  .card-header {
+    display: flex; align-items: center; gap: 0.6rem;
+    margin-bottom: 1.1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  .card-icon {
+    width: 28px; height: 28px;
+    border-radius: 7px;
+    background: var(--accent-soft);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--accent);
+    flex-shrink: 0;
+  }
+  .card-title {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 600; font-size: 1.02rem;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+  }
+  .card-badge {
+    margin-left: auto;
+    background: var(--accent-soft);
+    color: var(--accent);
+    border-radius: 6px; padding: 0.28rem 0.75rem;
+    font-family: 'Geist Mono', monospace;
+    font-size: 0.7rem; font-weight: 500;
+    letter-spacing: 0.04em;
+  }
+  .card-action {
+    margin-left: 0.4rem;
+    background: transparent; border: 1px solid var(--line);
+    color: var(--muted);
+    border-radius: 6px; padding: 0.3rem 0.5rem;
+    cursor: pointer; transition: all 0.15s;
+    display: flex; align-items: center; gap: 0.3rem;
+    font-size: 0.74rem;
+    font-family: 'Geist Mono', monospace;
+  }
+  .card-action:hover {
+    background: var(--bg-warm); color: var(--ink);
+  }
+
+  .summary-text {
+    font-size: 1rem; color: var(--ink-soft);
+    line-height: 1.85;
+    font-family: 'Geist', sans-serif;
+  }
+
+  /* NER groups */
+  .ner-groups { display: flex; flex-direction: column; gap: 1.1rem; }
+  .ner-group-header {
+    display: flex; align-items: center; gap: 0.6rem;
+    margin-bottom: 0.55rem;
+  }
+  .ner-group-label {
+    font-family: 'Geist Mono', monospace;
+    font-size: 0.72rem; font-weight: 500;
+    color: var(--muted); letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .ner-group-count {
+    font-family: 'Geist Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--muted-2);
+  }
+  .ner-tags { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+  .ner-tag {
+    padding: 0.35rem 0.85rem; border-radius: 999px;
+    font-size: 0.85rem; font-weight: 500;
+    border: 1px solid;
+    transition: all 0.2s;
+    cursor: default;
+    animation: tag-rise 0.4s ease both;
+  }
+  .ner-tag:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+  }
+
+  @keyframes tag-rise {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Error */
+  .error-card {
+    background: #FEF2F2; border: 1px solid #FECACA;
+    border-radius: 14px; padding: 1.2rem 1.4rem;
+    color: #B91C1C; font-size: 0.9rem;
+    display: flex; align-items: flex-start; gap: 0.8rem;
+  }
+  .error-icon {
+    color: #DC2626; flex-shrink: 0; margin-top: 2px;
+  }
+
+  /* Toast */
+  .toast {
+    position: fixed; bottom: 2rem; right: 2rem;
+    background: var(--ink); color: white;
+    padding: 0.7rem 1.2rem; border-radius: 10px;
+    font-size: 0.85rem;
+    display: flex; align-items: center; gap: 0.5rem;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    z-index: 1000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transform: translateY(20px);
+  }
+  .toast.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #D0CCC0; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #B8B4A8; }
+
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Mobile */
+  @media (max-width: 768px) {
+    .sidebar { display: none; }
+    .stats-row { grid-template-columns: repeat(2, 1fr); }
+    .topbar { padding: 0 1rem; }
+    .topbar-right { gap: 0.3rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside class="sidebar">
+  <a href="/" class="sidebar-brand">
+    <div class="brand-mark">
+      <svg viewBox="0 0 28 28" fill="none">
+        <circle cx="14" cy="14" r="13" stroke="currentColor" stroke-width="1.5"/>
+        <path d="M14 1V14L23 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="brand-name">Ringkas</div>
+  </a>
+
+  <button class="new-btn" onclick="resetView()">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+      <path d="M7 3V11M3 7H11" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+    </svg>
+    Ringkasan baru
+  </button>
+
+  <div class="sidebar-section">Riwayat sesi</div>
+  <div class="history-list" id="historyList">
+    <div class="history-empty">Belum ada riwayat. Mulai dengan menempelkan URL artikel di kanan.</div>
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="status-row">
+      <span class="status-dot"></span>
+      MODEL AKTIF
+    </div>
+    <a href="/" class="footer-link">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+        <path d="M9 11L5 7L9 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Kembali ke beranda
+    </a>
+  </div>
+</aside>
+
+<!-- Main -->
+<main>
+  <div class="topbar">
+    <div class="topbar-left">
+      <strong>Indonesian News Summarizer</strong>
+    </div>
+    <div class="topbar-right">
+      <div class="model-tag">BERT2GPT</div>
+      <div class="model-tag">IndoBERT-NER</div>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="content-inner" id="contentInner">
+
+      <div class="input-section" id="inputSection">
+        <div class="input-greeting">Selamat <em>datang</em></div>
+        <div class="input-subtitle">
+          Tempel URL artikel berita Indonesia. Sistem akan mengambil
+          konten, meringkasnya, dan mendeteksi entitas penting di dalamnya.
+        </div>
+
+        <div class="url-box">
+          <textarea class="url-input" id="urlInput" rows="2"
+            placeholder="Tempel URL artikel berita Indonesia di sini..."></textarea>
+          <div class="url-actions">
+            <div class="length-row">
+              <button class="length-btn" data-val="pendek" onclick="setLength(this)">Pendek</button>
+              <button class="length-btn active" data-val="sedang" onclick="setLength(this)">Sedang</button>
+              <button class="length-btn" data-val="panjang" onclick="setLength(this)">Panjang</button>
+            </div>
+            <button class="submit-btn" id="submitBtn" onclick="runSummarize()">
+              Ringkas
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                <path d="M3 9L9 3M9 3H4.5M9 3V7.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="supported">
+          <span class="supported-chip">detik.com</span>
+          <span class="supported-chip">kompas.com</span>
+          <span class="supported-chip">tribunnews.com</span>
+          <span class="supported-chip">tempo.co</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</main>
+
+<!-- Toast -->
+<div class="toast" id="toast">
+  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+    <path d="M3 7L6 10L11 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+  <span id="toastText">Tersalin</span>
+</div>
+
+<script>
+const API = '';
+let selectedLength = 'sedang';
+let history = [];
+let activeIdx = -1;
+
+// Pre-fill URL from landing
+const params = new URLSearchParams(window.location.search);
+const preUrl = params.get('url');
+if (preUrl) {
+  setTimeout(() => {
+    const el = document.getElementById('urlInput');
+    if (el) el.value = preUrl;
+  }, 50);
+}
+
+function setLength(btn) {
+  document.querySelectorAll('.length-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  selectedLength = btn.dataset.val;
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey && document.activeElement.id === 'urlInput') {
+    e.preventDefault(); runSummarize();
+  }
+});
+
+function resetView() {
+  activeIdx = -1;
+  renderHistory();
+  showInput();
+}
+
+function showInput() {
+  document.getElementById('contentInner').innerHTML = `
+    <div class="input-section">
+      <div class="input-greeting">Selamat <em>datang</em></div>
+      <div class="input-subtitle">
+        Tempel URL artikel berita Indonesia. Sistem akan mengambil
+        konten, meringkasnya, dan mendeteksi entitas penting di dalamnya.
+      </div>
+
+      <div class="url-box">
+        <textarea class="url-input" id="urlInput" rows="2"
+          placeholder="Tempel URL artikel berita Indonesia di sini..."></textarea>
+        <div class="url-actions">
+          <div class="length-row">
+            <button class="length-btn ${selectedLength==='pendek'?'active':''}" data-val="pendek" onclick="setLength(this)">Pendek</button>
+            <button class="length-btn ${selectedLength==='sedang'?'active':''}" data-val="sedang" onclick="setLength(this)">Sedang</button>
+            <button class="length-btn ${selectedLength==='panjang'?'active':''}" data-val="panjang" onclick="setLength(this)">Panjang</button>
+          </div>
+          <button class="submit-btn" id="submitBtn" onclick="runSummarize()">
+            Ringkas
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+              <path d="M3 9L9 3M9 3H4.5M9 3V7.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="supported">
+        <span class="supported-chip">detik.com</span>
+        <span class="supported-chip">kompas.com</span>
+        <span class="supported-chip">tribunnews.com</span>
+        <span class="supported-chip">tempo.co</span>
+      </div>
+    </div>
+  `;
+}
+
+async function runSummarize() {
+  const urlEl = document.getElementById('urlInput');
+  if (!urlEl) return;
+  const url = urlEl.value.trim();
+
+  if (!url) { toast('Tempel URL artikel terlebih dahulu', true); return; }
+  if (!url.startsWith('http')) { toast('URL tidak valid', true); return; }
+
+  showLoading();
+
+  // Simulate stage progression for visual feedback
+  setTimeout(() => setStage(1), 200);
+  setTimeout(() => setStage(2), 1500);
+  setTimeout(() => setStage(3), 3000);
+
+  try {
+    const res = await fetch(API + '/api/summarize', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url, length: selectedLength }),
+    });
+    const data = await res.json();
+
+    if (!data.success) {
+      showError(data.error || 'Gagal memproses artikel.');
+    } else {
+      showResult(data);
+      addHistory(data, url);
+    }
+  } catch (err) {
+    showError('Gagal terhubung ke server. Pastikan backend FastAPI berjalan.');
+  }
+}
+
+function setStage(n) {
+  for (let i = 1; i <= 3; i++) {
+    const el = document.getElementById('stage-' + i);
+    if (!el) continue;
+    el.classList.remove('active', 'done');
+    if (i < n) el.classList.add('done');
+    else if (i === n) el.classList.add('active');
+  }
+  // Update spinners
+  document.querySelectorAll('.loading-card').forEach((c, i) => {
+    const idx = i + 1;
+    const right = c.querySelector('.right-icon');
+    if (!right) return;
+    if (idx < n) {
+      right.innerHTML = '<svg class="loading-check" viewBox="0 0 18 18" fill="none"><path d="M4 9L7.5 12.5L14 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    } else if (idx === n) {
+      right.innerHTML = '<div class="loading-spinner"></div>';
+    } else {
+      right.innerHTML = '';
+    }
+  });
+}
+
+function showLoading() {
+  document.getElementById('contentInner').innerHTML = `
+    <div class="loading-section">
+      <div class="loading-card" id="stage-1">
+        <div class="loading-num">01</div>
+        <div class="loading-content">
+          <div class="loading-title">Mengambil artikel</div>
+          <div class="loading-desc">Scraping konten dari URL</div>
+        </div>
+        <div class="right-icon"></div>
+      </div>
+      <div class="loading-card" id="stage-2">
+        <div class="loading-num">02</div>
+        <div class="loading-content">
+          <div class="loading-title">Membuat ringkasan</div>
+          <div class="loading-desc">BERT2GPT memproses artikel</div>
+        </div>
+        <div class="right-icon"></div>
+      </div>
+      <div class="loading-card" id="stage-3">
+        <div class="loading-num">03</div>
+        <div class="loading-content">
+          <div class="loading-title">Mendeteksi entitas</div>
+          <div class="loading-desc">IndoBERT-NER mengidentifikasi nama, lokasi, organisasi</div>
+        </div>
+        <div class="right-icon"></div>
+      </div>
+    </div>
+  `;
+}
+
+function showError(msg) {
+  document.getElementById('contentInner').innerHTML = `
+    <div class="results">
+      <div class="error-card">
+        <svg class="error-icon" width="18" height="18" viewBox="0 0 18 18" fill="none">
+          <circle cx="9" cy="9" r="7.5" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M9 5V9.5M9 12.5V12.51" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        <div>${msg}</div>
+      </div>
+      <div style="text-align:center;margin-top:1rem;">
+        <button class="submit-btn" onclick="resetView()">Coba lagi</button>
+      </div>
+    </div>
+  `;
+}
+
+function showResult(d) {
+  const grouped = {};
+  for (const e of d.entities) {
+    if (!grouped[e.label]) grouped[e.label] = { label_display: e.label_display, color: e.color, items: [] };
+    grouped[e.label].items.push(e);
+  }
+  const nerHtml = Object.values(grouped).map(g => `
+    <div>
+      <div class="ner-group-header">
+        <div class="ner-group-label">${g.label_display}</div>
+        <div class="ner-group-count">${g.items.length}</div>
+      </div>
+      <div class="ner-tags">
+        ${g.items.map((e, i) => `
+          <span class="ner-tag"
+            style="color:${e.color};border-color:${e.color}40;background:${e.color}0D;animation-delay:${i*0.04}s;">
+            ${e.text}
+          </span>`).join('')}
+      </div>
+    </div>`).join('');
+
+  document.getElementById('contentInner').innerHTML = `
+    <div class="results">
+
+      <div class="article-hero">
+        <div class="article-hero-eyebrow">Artikel berhasil diproses</div>
+        <div class="article-hero-title">${d.title || 'Artikel Berita'}</div>
+        <div class="article-hero-source">${d.source} · ${d.word_count} kata</div>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-card-label">Kata artikel</div>
+          <div class="stat-val">${d.word_count}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-label">Kata ringkasan</div>
+          <div class="stat-val">${d.summary_word_count}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-label">Entitas</div>
+          <div class="stat-val">${d.entity_count}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-label">Kompresi</div>
+          <div class="stat-val">${d.compression_pct}<sup>%</sup></div>
+        </div>
+      </div>
+
+      <div class="result-card">
+        <div class="card-header">
+          <div class="card-icon">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M3 3.5C3 3.22 3.22 3 3.5 3H10.5C10.78 3 11 3.22 11 3.5V11C11 11.28 10.78 11.5 10.5 11.5H3.5C3.22 11.5 3 11.28 3 11V3.5Z" stroke="currentColor" stroke-width="1.3"/>
+              <path d="M4.5 5.5H9.5M4.5 7.5H9.5M4.5 9.5H8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="card-title">Ringkasan</div>
+          <div class="card-badge">BERT2GPT · Liputan6</div>
+          <button class="card-action" onclick="copyText(\`${(d.summary || '').replace(/`/g,'\\`').replace(/\$/g,'\\$')}\`)">
+            <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
+              <rect x="3" y="3" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.2"/>
+              <path d="M2 7V2C2 1.45 2.45 1 3 1H7" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+            </svg>
+            Salin
+          </button>
+        </div>
+        <div class="summary-text">${d.summary || '<span style="color:var(--muted);font-style:italic;">Ringkasan tidak tersedia.</span>'}</div>
+      </div>
+
+      <div class="result-card">
+        <div class="card-header">
+          <div class="card-icon">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M7 2L9.5 4.5L12 4L12 8.5L9.5 9.5L7 12L4.5 9.5L2 8.5L2 4L4.5 4.5L7 2Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="card-title">Entitas terdeteksi</div>
+          <div class="card-badge">${d.entity_count} entitas</div>
+        </div>
+        ${d.entity_count > 0
+          ? `<div class="ner-groups">${nerHtml}</div>`
+          : '<div style="color:var(--muted);font-size:0.88rem;font-style:italic;padding:0.5rem 0;">Tidak ada entitas terdeteksi.</div>'
+        }
+      </div>
+
+    </div>
+  `;
+}
+
+function copyText(text) {
+  navigator.clipboard.writeText(text).then(() => {
+    toast('Ringkasan tersalin');
+  }).catch(() => toast('Gagal menyalin', true));
+}
+
+function toast(msg, isErr) {
+  const t = document.getElementById('toast');
+  document.getElementById('toastText').textContent = msg;
+  t.style.background = isErr ? '#DC2626' : 'var(--ink)';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function addHistory(data, url) {
+  const item = {
+    title: data.title || url.slice(0, 50),
+    source: data.source,
+    data, url,
+  };
+  history.unshift(item);
+  if (history.length > 10) history.pop();
+  activeIdx = 0;
+  renderHistory();
+}
+
+function renderHistory() {
+  const list = document.getElementById('historyList');
+  if (!history.length) {
+    list.innerHTML = '<div class="history-empty">Belum ada riwayat. Mulai dengan menempelkan URL artikel di kanan.</div>';
+    return;
+  }
+  list.innerHTML = history.map((item, i) => `
+    <div class="history-item ${i === activeIdx ? 'active' : ''}" onclick="loadHistory(${i})">
+      <div class="history-item-title">${item.title}</div>
+      <div class="history-item-meta">${item.source}</div>
+    </div>
+  `).join('');
+}
+
+function loadHistory(i) {
+  activeIdx = i;
+  renderHistory();
+  showResult(history[i].data);
+}
+</script>
+
+</body>
+</html>
