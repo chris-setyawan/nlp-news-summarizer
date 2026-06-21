@@ -2,7 +2,9 @@
 models/summarizer.py
 ====================
 Komponen summarization menggunakan bert2gpt-indonesian-summarization.
-Model sudah di-fine-tune pada dataset IndoSum + Liputan6.
+Menggunakan model pre-trained tanpa fine-tuning tambahan, berdasarkan
+hasil evaluasi ROUGE yang menunjukkan performa terbaik dibanding
+varian yang di-fine-tune pada IndoSum maupun Liputan6.
 """
 
 import re
@@ -13,9 +15,10 @@ from typing import Optional
 
 
 # ── Konstanta ──────────────────────────────────────────────────────────────────
-FINETUNED_MODEL  = "models/finetuned_liputan6"
 BASE_MODEL       = "cahya/bert2gpt-indonesian-summarization"
 MAX_INPUT_LENGTH = 512
+
+
 @dataclass
 class SummaryResult:
     summary: str
@@ -23,6 +26,7 @@ class SummaryResult:
     output_length: int
     success: bool
     error_message: Optional[str] = None
+
 
 SUMMARY_LENGTH = {
     "pendek":  {"min": 15, "max": 35},
@@ -61,7 +65,7 @@ COMMON_SHORT = {
 # ── Post-processing helpers ────────────────────────────────────────────────────
 def _build_case_map(original_text: str) -> dict:
     """
-    Bangun mapping lowercase → proper case dari teks artikel asli.
+    Bangun mapping lowercase ke proper case dari teks artikel asli.
     Hanya untuk kata yang bukan kata umum (proper nouns: nama orang, kota, negara, dll).
     """
     case_map = {}
@@ -70,10 +74,8 @@ def _build_case_map(original_text: str) -> dict:
         if not clean or len(clean) <= 1:
             continue
         lower = clean.lower()
-        # Skip kata umum — jangan masukkan ke case_map
         if lower in COMMON_WORDS:
             continue
-        # Prioritaskan bentuk yang sudah kapital
         if lower not in case_map or clean[0].isupper():
             case_map[lower] = clean
     return case_map
@@ -100,14 +102,11 @@ def _remove_garbage_words(text: str, case_map: dict) -> str:
     cleaned = []
     for w in words:
         core = re.sub(r'^[^\w]+|[^\w]+$', '', w)
-        # Selalu pertahankan angka
         if re.match(r'^[\d.,]+$', core):
             cleaned.append(w)
             continue
-        # Hapus kata terlalu panjang (garbage concatenation)
         if len(core) > 20:
             continue
-        # Hapus kata sangat pendek yang tidak ada di artikel dan bukan kata umum
         if len(core) <= 2 and core.lower() not in case_map and core.lower() not in COMMON_SHORT:
             continue
         cleaned.append(w)
@@ -118,31 +117,26 @@ def _postprocess(text: str, case_map: dict = None) -> str:
     """
     Bersihkan dan perbaiki teks ringkasan:
     1. Hapus kata garbage
-    2. Fix spasi tanda baca & apostrof
-    3. Fix angka (50. 000 → 50.000)
-    4. Pecah per kalimat, filter kalimat pendek
+    2. Fix spasi tanda baca dan apostrof
+    3. Fix angka (50. 000 -> 50.000)
+    4. Pecah per kalimat, filter kalimat pendek dan duplikat
     5. Apply case map (proper nouns dari artikel asli)
     6. Capitalize huruf pertama tiap kalimat
     """
     if not text:
         return text
 
-    # 1. Hapus garbage
     if case_map:
         text = _remove_garbage_words(text, case_map)
 
-    # 2. Fix spasi tanda baca
     text = re.sub(r'\s+([.,;:!?])', r'\1', text)
     text = re.sub(r'\s+', ' ', text).strip()
 
-    # 3. Fix apostrof
     text = re.sub(r"\s+'", "'", text)
     text = re.sub(r"'\s+", "'", text)
 
-    # 4. Fix angka dengan spasi (50. 000 → 50.000)
     text = re.sub(r'(\d+)\.\s+(\d+)', r'\1.\2', text)
 
-    # 5. Pecah per kalimat
     sentences = re.split(r'(?<=[.!?])\s+', text)
     cleaned   = []
     seen_words_sets = []
@@ -150,10 +144,8 @@ def _postprocess(text: str, case_map: dict = None) -> str:
         s = s.strip()
         if not s:
             continue
-        # Skip kalimat terlalu pendek
         if len(s.split()) < 5:
             continue
-        # Skip kalimat yang >60% katanya sama dengan kalimat sebelumnya
         words_set = set(s.lower().split())
         is_dup = False
         for prev_set in seen_words_sets:
@@ -163,12 +155,9 @@ def _postprocess(text: str, case_map: dict = None) -> str:
         if is_dup:
             continue
         seen_words_sets.append(words_set)
-        # Apply case map proper nouns
         if case_map:
             s = _apply_case_map(s, case_map)
-        # Capitalize huruf pertama kalimat
         s = s[0].upper() + s[1:] if len(s) > 1 else s.upper()
-        # Pastikan diakhiri titik
         if not s.endswith(('.', '!', '?')):
             s += '.'
         cleaned.append(s)
@@ -181,24 +170,17 @@ def _postprocess(text: str, case_map: dict = None) -> str:
 class Summarizer:
     """
     Wrapper untuk model bert2gpt Indonesian summarization.
-    Fine-tuned pada IndoSum + Liputan6.
+    Menggunakan checkpoint pre-trained cahya/bert2gpt-indonesian-summarization
+    tanpa fine-tuning tambahan, sesuai hasil evaluasi ROUGE pada Liputan6.
     """
 
     def __init__(self, model_path: str = None, device: str = None):
-        import os
-        if model_path:
-            self.model_path = model_path
-        elif os.path.exists(FINETUNED_MODEL):
-            self.model_path = FINETUNED_MODEL
-            print(f"[Summarizer] Menggunakan fine-tuned model: {FINETUNED_MODEL}")
-        else:
-            self.model_path = BASE_MODEL
-            print(f"[Summarizer] Pakai base model: {BASE_MODEL}")
-
-        self.device    = device or ("cuda" if torch.cuda.is_available() else "cpu")
-        self.model     = None
-        self.tokenizer = None
-        self._loaded   = False
+        self.model_path = model_path or BASE_MODEL
+        self.device     = device or ("cuda" if torch.cuda.is_available() else "cpu")
+        self.model      = None
+        self.tokenizer  = None
+        self._loaded    = False
+        print(f"[Summarizer] Model: {self.model_path}")
         print(f"[Summarizer] Device: {self.device}")
 
     def load(self):
@@ -212,7 +194,7 @@ class Summarizer:
         self.model.to(self.device)
         self.model.eval()
         self._loaded = True
-        print("[Summarizer] Model berhasil dimuat!")
+        print("[Summarizer] Model berhasil dimuat.")
 
     def summarize(self, text: str, length: str = "sedang") -> SummaryResult:
         """
@@ -238,10 +220,8 @@ class Summarizer:
         length_config = SUMMARY_LENGTH.get(length, SUMMARY_LENGTH["sedang"])
 
         try:
-            # Build case map dari artikel asli
             case_map = _build_case_map(text)
 
-            # Tokenisasi
             inputs = self.tokenizer(
                 text,
                 return_tensors="pt",
@@ -252,7 +232,6 @@ class Summarizer:
 
             input_length = inputs["input_ids"].shape[1]
 
-            # Generate ringkasan
             with torch.no_grad():
                 output_ids = self.model.generate(
                     inputs["input_ids"],
@@ -271,14 +250,12 @@ class Summarizer:
                     pad_token_id=self.tokenizer.pad_token_id,
                 )
 
-            # Decode
             raw_summary = self.tokenizer.decode(
                 output_ids[0],
                 skip_special_tokens=True,
                 clean_up_tokenization_spaces=True
             )
 
-            # Post-processing
             summary = _postprocess(raw_summary, case_map)
 
             return SummaryResult(
@@ -316,8 +293,8 @@ if __name__ == "__main__":
     result = summarizer.summarize(sample_text, length="sedang")
 
     if result.success:
-        print(f"✅ Ringkasan:\n{result.summary}")
+        print(f"Ringkasan:\n{result.summary}")
         print(f"\nInput tokens : {result.input_length}")
         print(f"Output tokens: {result.output_length}")
     else:
-        print(f"❌ Error: {result.error_message}")
+        print(f"Error: {result.error_message}")
