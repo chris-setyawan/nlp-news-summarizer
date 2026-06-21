@@ -14,7 +14,7 @@ This system takes a URL from an Indonesian news portal, scrapes the article cont
 
 | Component | Model |
 |---|---|
-| Summarization | cahya/bert2gpt-indonesian-summarization (fine-tuned on Liputan6) |
+| Summarization | cahya/bert2gpt-indonesian-summarization (pre-trained, no additional fine-tuning — selected based on superior ROUGE evaluation) |
 | Named Entity Recognition | cahya/bert-base-indonesian-NER |
 
 ## Project Structure
@@ -55,10 +55,6 @@ uvicorn backend.main:app --port 8000
 ```
 
 Open your browser at `http://localhost:8000`.
-
-## Model Weights
-
-The fine-tuned model weights are not included in this repository due to file size (~7 GB). Place the fine-tuned model folder at `models/finetuned_liputan6/` before running. If this folder is not found, the system will fall back to the base pre-trained model automatically.
 
 ## Supported News Portals
 
