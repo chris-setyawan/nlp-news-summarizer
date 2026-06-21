@@ -14,7 +14,7 @@ This system takes a URL from an Indonesian news portal, scrapes the article cont
 
 | Component | Model |
 |---|---|
-| Summarization | cahya/bert2gpt-indonesian-summarization (pre-trained, no additional fine-tuning — selected based on superior ROUGE evaluation) |
+| Summarization | cahya/bert2gpt-indonesian-summarization (pre-trained, no additional fine-tuning: selected based on superior ROUGE evaluation) |
 | Named Entity Recognition | cahya/bert-base-indonesian-NER |
 
 ## Project Structure
